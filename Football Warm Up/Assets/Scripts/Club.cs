@@ -7,6 +7,7 @@ public class Club : IComparable<Club>
 {
     public string Name;
     public int ID;
+    double Balance;
     public List<Goalkeeper> Goalies;
     public List<OutfieldPlayer> Defenders;
     public List<OutfieldPlayer> Midfielders;
@@ -26,33 +27,48 @@ public class Club : IComparable<Club>
     public int Losses;
     public int Points;
 
+    public string Tactic;
+    public string PassingStyle;
+    public string TacklingStyle;
+    public string ShootingStyle;
+    public Goalkeeper Goalie;
+    public Dictionary<string, OutfieldPlayer> FirstTeam;
+
+    public List<Match> Results;
     public List<Fixture> Fixtures;
 
-    public Club(string name, int index)
+    public Club(string name, int index, double balance)
     {
         Goalies = new List<Goalkeeper>();
         Defenders = new List<OutfieldPlayer>();
         Midfielders = new List<OutfieldPlayer>();
         Forwards = new List<OutfieldPlayer>();
+        Results = new List<Match>();
         Fixtures = new List<Fixture>();
+        FirstTeam = new Dictionary<string, OutfieldPlayer>();
         Name = name;
         ID = index;
+        Balance = balance;
+        Tactic = "442";
+        PassingStyle = "Mixed";
+        TacklingStyle = "Mixed";
+        ShootingStyle = "Mixed";
 
         for (int i = 0; i < 3; i++)
         {
-            Goalies.Add(new Goalkeeper());
+            Goalies.Add(new Goalkeeper(balance));
         }
         for (int i = 0; i < 8; i++)
         {
-            Defenders.Add(new OutfieldPlayer("Defender"));
+            Defenders.Add(new OutfieldPlayer("Defender", balance));
         }
         for (int i = 0; i < 8; i++)
         {
-            Midfielders.Add(new OutfieldPlayer("Midfielder"));
+            Midfielders.Add(new OutfieldPlayer("Midfielder", balance));
         }
         for (int i = 0; i < 6; i++)
         {
-            Forwards.Add(new OutfieldPlayer("Forward"));
+            Forwards.Add(new OutfieldPlayer("Forward", balance));
         }
 
 

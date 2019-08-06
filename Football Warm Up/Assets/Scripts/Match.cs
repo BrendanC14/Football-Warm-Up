@@ -1,10 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public enum Result { HomeWin, Draw, AwayWin }
 
-public class Match
+public class Match : IComparable<Match>
 {
     public int HomeID;
     public int AwayID;
@@ -17,8 +18,8 @@ public class Match
     {
         HomeID = home;
         AwayID = away;
-        HomeScore = Random.Range(0, 5);
-        AwayScore = Random.Range(0, 5);
+        HomeScore = UnityEngine.Random.Range(0, 5);
+        AwayScore = UnityEngine.Random.Range(0, 5);
         result = GetResult();
         GameWeek = gw;
     }
@@ -39,4 +40,9 @@ public class Match
         }
     }
 
+    public int CompareTo(Match other)
+    {
+        return GameWeek.CompareTo(other.GameWeek);
+
+    }
 }

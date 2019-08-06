@@ -32,6 +32,7 @@ public class GameMenuController : MonoBehaviour
 
     public GameObject GameWeek;
 
+    Goalkeeper goalieSelected;
     Dictionary<string, GameObject> PositionGOMap;
     Dictionary<Goalkeeper, GameObject> GoalieGOMap;
     Dictionary<OutfieldPlayer, GameObject> DefenderGOMap;
@@ -39,10 +40,20 @@ public class GameMenuController : MonoBehaviour
     Dictionary<OutfieldPlayer, GameObject> ForwardGOMap;
     Dictionary<GameObject, OutfieldPlayer> PositionPlayerMap;
 
+    public GameObject PassingShort;
+    public GameObject PassingMixed;
+    public GameObject PassingDirect;
+    public GameObject TacklingSoft;
+    public GameObject TacklingMixed;
+    public GameObject TacklingHard;
+    public GameObject ShootingShort;
+    public GameObject ShootingMixed;
+    public GameObject ShootingLong;
+
     public GameObject Tactic442;
     public GameObject Tactic433;
     public GameObject Tactic41212;
-    public GameObject Tactic41231;
+    public GameObject Tactic4231;
     public GameObject Tactic32212;
     public GameObject Tactic33211;
 
@@ -50,10 +61,14 @@ public class GameMenuController : MonoBehaviour
     List<GameObject> List442;
     List<GameObject> List433;
     List<GameObject> List41212;
-    List<GameObject> List41231;
+    List<GameObject> List4231;
     List<GameObject> List32212;
     List<GameObject> List33211;
 
+    string passingStyleSelected = "Mixed";
+    string tacklingStyleSelected = "Mixed";
+    string shootingStyleSelected = "Mixed";
+    string tacticSelected;
     GameObject positionSelected;
     public GameObject GK;
     public GameObject DL;
@@ -85,6 +100,11 @@ public class GameMenuController : MonoBehaviour
     public GameObject FW3;
     public GameObject FW4;
     public GameObject FW5;
+
+    public GameObject ConfirmBox;
+    public Text ConfirmBoxText;
+    public GameObject ConfirmBoxButton;
+    public GameObject ConfirmBoxCancelButton;
 
 
     // Start is called before the first frame update
@@ -122,6 +142,10 @@ public class GameMenuController : MonoBehaviour
             teamLeageController.Points.text = c.Points.ToString();
             leagueTeamDisplay.transform.SetParent(TeamLeagueParent.transform);
             leagueTeamDisplay.transform.localScale = new Vector3(1f, 1f, 1f);
+            if (c == WorldController.current.ChosenTeam)
+            {
+                leagueTeamDisplay.GetComponent<Image>().color = new Color(0.7f, 1f, 1f, 1f);
+            }
         }
     }
 
@@ -143,8 +167,12 @@ public class GameMenuController : MonoBehaviour
             Match m = new Match(f.HomeID, f.AwayID, f.GameWeek);
             WorldController.current.LeagueResults.Add(m);
             WorldController.current.Clubs[f.HomeID].UpdateLeagueStats(m);
+            WorldController.current.Clubs[f.HomeID].Results.Add(m);
             WorldController.current.Clubs[f.AwayID].UpdateLeagueStats(m);
+            WorldController.current.Clubs[f.AwayID].Results.Add(m);
             WorldController.current.Fixtures.Remove(f);
+            WorldController.current.Clubs[f.HomeID].Fixtures.Remove(f);
+            WorldController.current.Clubs[f.AwayID].Fixtures.Remove(f);
         }
         WorldController.current.GameWeek++;
         GameWeek.GetComponent<Text>().text = "Gameweek: " + WorldController.current.GameWeek.ToString();
@@ -194,6 +222,10 @@ public class GameMenuController : MonoBehaviour
             fixtureViewController.HomeTeam.text = WorldController.current.Clubs[f.HomeID].Name;
             fixtureViewController.AwayTeam.text = WorldController.current.Clubs[f.AwayID].Name;
             fixtureDisplay.transform.SetParent(FixtureParent.transform);
+            if (WorldController.current.IsMyClubID(f.HomeID) || WorldController.current.IsMyClubID(f.AwayID))
+            {
+                fixtureDisplay.GetComponent<Image>().color = new Color(0.7f, 1f, 1f, 1f);
+            }
         }
     }
     public void CloseFixtures()
@@ -209,8 +241,56 @@ public class GameMenuController : MonoBehaviour
     public void OpenSchedule()
     {
         SchedulePanel.SetActive(true);
-        WorldController.current.ChosenTeam.Fixtures.Sort();
-        foreach (Fixture f in WorldController.current.ChosenTeam.Fixtures)
+        WorldController.current.ChosenTeam.Results.Sort();
+        Club chosenTeam = WorldController.current.ChosenTeam;
+        foreach (Match m in chosenTeam.Results)
+        {
+            GameObject resultDisplay = Instantiate(ResultViewPrefab) as GameObject;
+            resultViewController = resultDisplay.GetComponent<ResultVuewPrefabController>();
+            resultViewController.GameWeek.text = "Gameweek " + m.GameWeek.ToString();
+            resultViewController.HomeTeam.text = WorldController.current.Clubs[m.HomeID].Name;
+            resultViewController.HomeScore.text = m.HomeScore.ToString();
+            resultViewController.AwayScore.text = m.AwayScore.ToString();
+            resultViewController.AwayTeam.text = WorldController.current.Clubs[m.AwayID].Name;
+            resultDisplay.transform.SetParent(ScheduleParent.transform);
+
+            if (m.HomeScore == m.AwayScore)
+            {
+                resultDisplay.GetComponent<Image>().color = new Color(1f, 0.5f, 0.3f, 1f);
+            }
+            else
+            {
+                if (m.HomeScore > m.AwayScore)
+                {
+                    if (m.HomeID == chosenTeam.ID)
+                    {
+                        resultDisplay.GetComponent<Image>().color = new Color(0.1f, 0.7f, 0.4f, 1f);
+
+                    }
+                    else
+                    {
+                        resultDisplay.GetComponent<Image>().color = new Color(1f, 0f, 0.2f, 1f);
+
+                    }
+                }
+                else
+                {
+                    if (m.AwayID == chosenTeam.ID)
+                    {
+                        resultDisplay.GetComponent<Image>().color = new Color(0.1f, 0.7f, 0.4f, 1f);
+
+                    }
+                    else
+                    {
+                        resultDisplay.GetComponent<Image>().color = new Color(1f, 0f, 0.2f, 1f);
+
+                    }
+
+                }
+            }
+        }
+        chosenTeam.Fixtures.Sort();
+        foreach (Fixture f in chosenTeam.Fixtures)
         {
             GameObject fixtureDisplay = Instantiate(SchedulePrefab) as GameObject;
             fixtureDisplay.name = f.HomeID.ToString() + "V" + f.AwayID.ToString();
@@ -261,7 +341,7 @@ public class GameMenuController : MonoBehaviour
                 "\nOne on ones: " + goalie.OneOnOnes.ToString() +
                 "\nPassing: " + goalie.Passing.ToString() +
                 "\nDiving: " + goalie.Diving.ToString();
-            squadPlayerController.Select.onClick.AddListener(() => SelectPlayer("Goalkeeper", goalie));
+            squadPlayerController.Select.onClick.AddListener(() => SelectPlayer(goalie));
             newPlayerDisplay.transform.SetParent(SquadPlayerParent.transform);
             GoalieGOMap.Add(goalie, newPlayerDisplay);
         }
@@ -278,7 +358,7 @@ public class GameMenuController : MonoBehaviour
                 "\nShooting: " + player.Shooting.ToString() +
                 "\nInterceptions: " + player.Interception.ToString() +
                 "\nVision: " + player.Vision.ToString();
-            squadPlayerController.Select.onClick.AddListener(() => SelectPlayer("Defender", null, player));
+            squadPlayerController.Select.onClick.AddListener(() => SelectPlayer(null, player));
             newPlayerDisplay.transform.SetParent(SquadPlayerParent.transform);
             DefenderGOMap.Add(player, newPlayerDisplay);
         }
@@ -295,7 +375,7 @@ public class GameMenuController : MonoBehaviour
                 "\nShooting: " + player.Shooting.ToString() +
                 "\nInterceptions: " + player.Interception.ToString() +
                 "\nVision: " + player.Vision.ToString();
-            squadPlayerController.Select.onClick.AddListener(() => SelectPlayer("Midfielder", null, player));
+            squadPlayerController.Select.onClick.AddListener(() => SelectPlayer(null, player));
             newPlayerDisplay.transform.SetParent(SquadPlayerParent.transform);
             MidfielderGOMap.Add(player, newPlayerDisplay);
         }
@@ -312,10 +392,47 @@ public class GameMenuController : MonoBehaviour
                 "\nShooting: " + player.Shooting.ToString() +
                 "\nInterceptions: " + player.Interception.ToString() +
                 "\nVision: " + player.Vision.ToString();
-            squadPlayerController.Select.onClick.AddListener(() => SelectPlayer("Forward", null, player));
+            squadPlayerController.Select.onClick.AddListener(() => SelectPlayer(null, player));
             newPlayerDisplay.transform.SetParent(SquadPlayerParent.transform);
             ForwardGOMap.Add(player, newPlayerDisplay);
         }
+
+        string clubTactic = c.Tactic;
+        if (clubTactic == "442") { SetTactic442(); }
+        else if (clubTactic == "433") { SetTactic433(); }
+        else if (clubTactic == "41212") { SetTactic41212(); }
+        else if (clubTactic == "4231") { SetTactic4231(); }
+        else if (clubTactic == "32212") { SetTactic4231(); }
+        else if (clubTactic == "32212") { SetTactic33211(); }
+
+        if (c.Goalie != null)
+        {
+            positionSelected = PositionGOMap["GK"];
+            SelectPlayer(c.Goalie);
+            positionSelected.GetComponent<Image>().color = new Color(0.3f, 0.4f, 0.4f, 0f);
+            positionSelected = null;
+        }
+
+        if (c.FirstTeam.Count > 0)
+        {
+            foreach (KeyValuePair<string, OutfieldPlayer> pair in c.FirstTeam)
+            {
+                positionSelected = PositionGOMap[pair.Key];
+                SelectPlayer(null, pair.Value);
+                positionSelected.GetComponent<Image>().color = new Color(0.3f, 0.4f, 0.4f, 0f);
+                positionSelected = null;
+            }
+        }
+
+        if (positionSelected != null)
+        {
+            positionSelected.GetComponent<Image>().color = new Color(0.3f, 0.4f, 0.4f, 0f);
+            positionSelected = null;
+        }
+
+        SetPassingStyle(c.PassingStyle);
+        SetTacklingStyle(c.TacklingStyle);
+        SetShootingStyle(c.ShootingStyle);
     }
     void CreateTacticLists()
     {
@@ -354,7 +471,7 @@ public class GameMenuController : MonoBehaviour
         List442 = new List<GameObject>();
         List433 = new List<GameObject>();
         List41212 = new List<GameObject>();
-        List41231 = new List<GameObject>();
+        List4231 = new List<GameObject>();
         List32212 = new List<GameObject>();
         List33211 = new List<GameObject>();
 
@@ -399,17 +516,17 @@ public class GameMenuController : MonoBehaviour
         List41212.Add(FW2);
         List41212.Add(FW4);
 
-        List41231.Add(GK);
-        List41231.Add(DL);
-        List41231.Add(CB2);
-        List41231.Add(CB4);
-        List41231.Add(DR);
-        List41231.Add(MC2);
-        List41231.Add(MC4);
-        List41231.Add(AML);
-        List41231.Add(AMC2);
-        List41231.Add(AMR);
-        List41231.Add(FW3);
+        List4231.Add(GK);
+        List4231.Add(DL);
+        List4231.Add(CB2);
+        List4231.Add(CB4);
+        List4231.Add(DR);
+        List4231.Add(MC2);
+        List4231.Add(MC4);
+        List4231.Add(AML);
+        List4231.Add(AMC2);
+        List4231.Add(AMR);
+        List4231.Add(FW3);
 
         List32212.Add(GK);
         List32212.Add(CB1);
@@ -438,6 +555,13 @@ public class GameMenuController : MonoBehaviour
 
     public void SetTactic442()
     {
+        Tactic442.GetComponent<Image>().color = new Color(0.1f, 0.7f, 0.4f, 1f);
+        Tactic433.GetComponent<Image>().color = Color.white;
+        Tactic41212.GetComponent<Image>().color = Color.white;
+        Tactic4231.GetComponent<Image>().color = Color.white;
+        Tactic32212.GetComponent<Image>().color = Color.white;
+        Tactic33211.GetComponent<Image>().color = Color.white;
+        tacticSelected = "442";
         ResetSuad();
         foreach (GameObject go in AllPositions)
         {
@@ -451,6 +575,13 @@ public class GameMenuController : MonoBehaviour
     }
     public void SetTactic433()
     {
+        tacticSelected = "433";
+        Tactic433.GetComponent<Image>().color = new Color(0.1f, 0.7f, 0.4f, 1f);
+        Tactic442.GetComponent<Image>().color = Color.white;
+        Tactic41212.GetComponent<Image>().color = Color.white;
+        Tactic4231.GetComponent<Image>().color = Color.white;
+        Tactic32212.GetComponent<Image>().color = Color.white;
+        Tactic33211.GetComponent<Image>().color = Color.white;
         ResetSuad();
         foreach (GameObject go in AllPositions)
         {
@@ -465,6 +596,13 @@ public class GameMenuController : MonoBehaviour
     }
     public void SetTactic41212()
     {
+        tacticSelected = "41212";
+        Tactic41212.GetComponent<Image>().color = new Color(0.1f, 0.7f, 0.4f, 1f);
+        Tactic433.GetComponent<Image>().color = Color.white;
+        Tactic442.GetComponent<Image>().color = Color.white;
+        Tactic4231.GetComponent<Image>().color = Color.white;
+        Tactic32212.GetComponent<Image>().color = Color.white;
+        Tactic33211.GetComponent<Image>().color = Color.white;
         ResetSuad();
         foreach (GameObject go in AllPositions)
         {
@@ -477,15 +615,22 @@ public class GameMenuController : MonoBehaviour
         }
 
     }
-    public void SetTactic41231()
+    public void SetTactic4231()
     {
+        tacticSelected = "4231";
+        Tactic4231.GetComponent<Image>().color = new Color(0.1f, 0.7f, 0.4f, 1f);
+        Tactic433.GetComponent<Image>().color = Color.white;
+        Tactic41212.GetComponent<Image>().color = Color.white;
+        Tactic442.GetComponent<Image>().color = Color.white;
+        Tactic32212.GetComponent<Image>().color = Color.white;
+        Tactic33211.GetComponent<Image>().color = Color.white;
         ResetSuad();
         foreach (GameObject go in AllPositions)
         {
             go.SetActive(false);
         }
 
-        foreach (GameObject go in List41231)
+        foreach (GameObject go in List4231)
         {
             go.SetActive(true);
         }
@@ -493,6 +638,13 @@ public class GameMenuController : MonoBehaviour
     }
     public void SetTactic32212()
     {
+        tacticSelected = "32212";
+        Tactic32212.GetComponent<Image>().color = new Color(0.1f, 0.7f, 0.4f, 1f);
+        Tactic433.GetComponent<Image>().color = Color.white;
+        Tactic41212.GetComponent<Image>().color = Color.white;
+        Tactic4231.GetComponent<Image>().color = Color.white;
+        Tactic442.GetComponent<Image>().color = Color.white;
+        Tactic33211.GetComponent<Image>().color = Color.white;
         ResetSuad();
         foreach (GameObject go in AllPositions)
         {
@@ -507,6 +659,13 @@ public class GameMenuController : MonoBehaviour
     }
     public void SetTactic33211()
     {
+        tacticSelected = "33211";
+        Tactic33211.GetComponent<Image>().color = new Color(0.1f, 0.7f, 0.4f, 1f);
+        Tactic433.GetComponent<Image>().color = Color.white;
+        Tactic41212.GetComponent<Image>().color = Color.white;
+        Tactic4231.GetComponent<Image>().color = Color.white;
+        Tactic32212.GetComponent<Image>().color = Color.white;
+        Tactic442.GetComponent<Image>().color = Color.white;
         ResetSuad();
         foreach (GameObject go in AllPositions)
         {
@@ -520,7 +679,78 @@ public class GameMenuController : MonoBehaviour
 
     }
 
-    void ResetSuad()
+    public void SetPassingStyle(string style)
+    {
+        if (style == "Mixed")
+        {
+            PassingDirect.GetComponent<Image>().color = Color.white;
+            PassingShort.GetComponent<Image>().color = Color.white;
+            PassingMixed.GetComponent<Image>().color = new Color(0.1f, 0.7f, 0.4f, 1f);
+        }
+        else if (style == "Short")
+        {
+            PassingDirect.GetComponent<Image>().color = Color.white;
+            PassingMixed.GetComponent<Image>().color = Color.white;
+            PassingShort.GetComponent<Image>().color = new Color(0.1f, 0.7f, 0.4f, 1f);
+
+        }
+        else
+        { 
+            PassingMixed.GetComponent<Image>().color = Color.white;
+            PassingShort.GetComponent<Image>().color = Color.white;
+            PassingDirect.GetComponent<Image>().color = new Color(0.1f, 0.7f, 0.4f, 1f);
+        }
+        passingStyleSelected = style;
+    }
+    public void SetTacklingStyle(string style)
+    {
+        if (style == "Mixed")
+        {
+            TacklingHard.GetComponent<Image>().color = Color.white;
+            TacklingSoft.GetComponent<Image>().color = Color.white;
+            TacklingMixed.GetComponent<Image>().color = new Color(0.1f, 0.7f, 0.4f, 1f);
+        }
+        else if (style == "Hard")
+        {
+            TacklingMixed.GetComponent<Image>().color = Color.white;
+            TacklingSoft.GetComponent<Image>().color = Color.white;
+            TacklingHard.GetComponent<Image>().color = new Color(0.1f, 0.7f, 0.4f, 1f);
+
+        }
+        else
+        {
+            TacklingHard.GetComponent<Image>().color = Color.white;
+            TacklingMixed.GetComponent<Image>().color = Color.white;
+            TacklingSoft.GetComponent<Image>().color = new Color(0.1f, 0.7f, 0.4f, 1f);
+        }
+        tacklingStyleSelected = style;
+    }
+    public void SetShootingStyle(string style)
+    {
+
+        if (style == "Mixed")
+        {
+            ShootingLong.GetComponent<Image>().color = Color.white;
+            ShootingShort.GetComponent<Image>().color = Color.white;
+            ShootingMixed.GetComponent<Image>().color = new Color(0.1f, 0.7f, 0.4f, 1f);
+        }
+        else if (style == "Long")
+        {
+            ShootingShort.GetComponent<Image>().color = Color.white;
+            ShootingMixed.GetComponent<Image>().color = Color.white;
+            ShootingLong.GetComponent<Image>().color = new Color(0.1f, 0.7f, 0.4f, 1f);
+
+        }
+        else
+        {
+            ShootingLong.GetComponent<Image>().color = Color.white;
+            ShootingMixed.GetComponent<Image>().color = Color.white;
+            ShootingShort.GetComponent<Image>().color = new Color(0.1f, 0.7f, 0.4f, 1f);
+        }
+        shootingStyleSelected = style;
+    }
+
+        void ResetSuad()
     {
         PositionPlayerMap = new Dictionary<GameObject, OutfieldPlayer>();
 
@@ -678,10 +908,11 @@ public class GameMenuController : MonoBehaviour
             positionSelected.GetComponent<Image>().color = new Color(0.3f, 0.4f, 0.4f, 0.5f);
         }
     }
-    void SelectPlayer(string pos, Goalkeeper goalie = null, OutfieldPlayer player = null)
+    void SelectPlayer(Goalkeeper goalie = null, OutfieldPlayer player = null)
     {
         if (player == null)
         {
+            goalieSelected = goalie;
             GK.GetComponentInChildren<Text>().text = goalie.Name;
             foreach(KeyValuePair<Goalkeeper, GameObject> pair in GoalieGOMap)
             {
@@ -745,19 +976,30 @@ public class GameMenuController : MonoBehaviour
                 if (PositionPlayerMap.ContainsValue(pair.Key))
                 {
                     pair.Value.GetComponent<SquadPlayerPrefab>().Select.interactable = false;
-                    pair.Value.GetComponent<SquadPlayerPrefab>().Select.gameObject.GetComponentInChildren<Text>().text = "Selected";
-
-                }
-                else
-                {
-                    pair.Value.GetComponent<SquadPlayerPrefab>().Select.interactable = true;
                     pair.Value.GetComponent<SquadPlayerPrefab>().Select.gameObject.GetComponentInChildren<Text>().text = "Select";
 
                 }
             }
         }
     }
-        string GetRole(string pos)
+    public void ConfirmSquad()
+    {
+        Club c = WorldController.current.ChosenTeam;
+        c.Tactic = tacticSelected;
+        c.Goalie = goalieSelected;
+        c.PassingStyle = passingStyleSelected;
+        c.TacklingStyle = tacklingStyleSelected;
+        c.ShootingStyle = shootingStyleSelected;
+        c.FirstTeam = new Dictionary<string, OutfieldPlayer>();
+        foreach (KeyValuePair<GameObject, OutfieldPlayer> pair in PositionPlayerMap)
+        {
+            WorldController.current.ChosenTeam.FirstTeam.Add(pair.Key.name, pair.Value);
+        }
+        CloseSquad();
+    }
+
+
+    string GetRole(string pos)
     {
         if (pos == "GK")
         {
@@ -774,10 +1016,37 @@ public class GameMenuController : MonoBehaviour
         return "Midfielder";
     }
 
-    public void CloseSquad()
+    public void CheckCloseSquad()
     {
 
+        ConfirmBoxButton.GetComponent<Button>().onClick.AddListener(() => CloseSquad());
+        OpenConfirmBox("Any changes will not be saved. Are you sure you want to leave?");
+    }
+
+    public void CloseSquad()
+    {
+        ConfirmBox.SetActive(false);
+        PositionPlayerMap = new Dictionary<GameObject, OutfieldPlayer>();
         SquadPanel.SetActive(false);
+        foreach (KeyValuePair<string, GameObject> go in PositionGOMap)
+        {
+            go.Value.GetComponentInChildren<Text>().text = "<empty>";
+            go.Value.GetComponent<Image>().color = new Color(0.3f, 0.4f, 0.4f, 0f);
+        }
+
+
+    }
+
+    void OpenConfirmBox(string text)
+    {
+        ConfirmBoxText.text = text;
+        ConfirmBox.SetActive(true);
+    }
+
+    public void CancelConfirmBox()
+    {
+        ConfirmBox.SetActive(false);
+
     }
 
     //      FW FW FW

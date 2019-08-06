@@ -18,9 +18,13 @@ public class WorldController : MonoBehaviour
     ClubViewPrefabController clubViewController;
 
     public List<Club> Clubs;
+    public List<Fixture> Fixtures;
     public List<Match> LeagueResults;
 
     public static WorldController current;
+    public Club ChosenTeam;
+
+    public int GameWeek;
 
     // Start is called before the first frame update
     void Start()
@@ -30,6 +34,7 @@ public class WorldController : MonoBehaviour
         GameMenuPanel.SetActive(false);
         Clubs = new List<Club>();
         LeagueResults = new List<Match>();
+        Fixtures = new List<Fixture>();
 
         Clubs.Add(new Club("Arsenal", 0));
         Clubs.Add(new Club("Aston Villa", 1));
@@ -69,6 +74,7 @@ public class WorldController : MonoBehaviour
             newClubDisplay.transform.SetParent(ClubDisplayParent.transform);
             ClubCount++;
         }
+        GameWeek = 1;
         current = this;
     }
 
@@ -165,5 +171,76 @@ public class WorldController : MonoBehaviour
         AllClubsPanel.SetActive(false);
         SquadViewPanel.SetActive(false);
         GameMenuPanel.SetActive(true);
+        ChosenTeam = Clubs[index];
+        CreateFixtures();
     }
+
+    void CreateFixtures()
+    {
+        //This is a list containing all the game weeks in the first half of the season
+        //Later, this gets randomised each loop so that the fixtures appear random.
+        List<int> AvailableWeeks = new List<int>();
+        for (int i = 1; i < 20; i++)
+        {
+            AvailableWeeks.Add(i);
+        }
+
+        int round;
+        for (int gameweek = 0; gameweek < 19; gameweek++)
+        {
+            round = AvailableWeeks[Random.Range(0, AvailableWeeks.Count - 1)];
+            AvailableWeeks.Remove(round);
+            for (int match = 0; match < 10; match++)
+            {
+                //This formula uses the round and match number to cycle through the teams in the list and back round
+                //and making sure each team plays each team at least once.
+                int HomeTeam = (gameweek + match) % 19;
+                int AwayTeam = (gameweek - match + 19) % 19;
+
+                if (match == 0) { AwayTeam = 19; }
+                Fixture fix = new Fixture(HomeTeam, AwayTeam, round);
+                Fixtures.Add(fix);
+                Clubs[HomeTeam].Fixtures.Add(fix);
+                Clubs[AwayTeam].Fixtures.Add(fix);
+            }
+        }
+
+        AvailableWeeks = new List<int>();
+        for (int i = 20; i < 39; i++)
+        {
+            AvailableWeeks.Add(i);
+        }
+        for (int gameweek = 0; gameweek < 19; gameweek++)
+        {
+            round = AvailableWeeks[Random.Range(0, AvailableWeeks.Count - 1)];
+            AvailableWeeks.Remove(round);
+            for (int match = 0; match < 10; match++)
+            {
+                //This now does exactly the same as above, but in reverse, so that I get home and away fixtures
+                int HomeTeam = (gameweek - match + 19) % 19;
+                int AwayTeam = (gameweek + match) % 19;
+
+                if (match == 0) { HomeTeam = 19; }
+                Fixture fix = new Fixture(HomeTeam, AwayTeam, round);
+                Fixtures.Add(fix);
+                Clubs[HomeTeam].Fixtures.Add(fix);
+                Clubs[AwayTeam].Fixtures.Add(fix);
+            }
+        }
+
+        Fixtures.Sort();
+
+        return;
+       
+    }
+
+    public bool IsMyClubID(int ID)
+    {
+        if (Clubs[ID] == ChosenTeam)
+        {
+            return true;
+        }
+        return false;
+    }
+
 }

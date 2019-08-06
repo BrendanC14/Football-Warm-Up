@@ -26,12 +26,15 @@ public class Club : IComparable<Club>
     public int Losses;
     public int Points;
 
+    public List<Fixture> Fixtures;
+
     public Club(string name, int index)
     {
         Goalies = new List<Goalkeeper>();
         Defenders = new List<OutfieldPlayer>();
         Midfielders = new List<OutfieldPlayer>();
         Forwards = new List<OutfieldPlayer>();
+        Fixtures = new List<Fixture>();
         Name = name;
         ID = index;
 
@@ -51,6 +54,7 @@ public class Club : IComparable<Club>
         {
             Forwards.Add(new OutfieldPlayer("Forward"));
         }
+
 
         int PassingCount = 0;
         int ShootingCount = 0;

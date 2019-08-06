@@ -1,18 +1,25 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
-public class Fixture : MonoBehaviour
+public class Fixture : IComparable<Fixture>
 {
-    // Start is called before the first frame update
-    void Start()
+    public int HomeID;
+    public int AwayID;
+    public int GameWeek;
+
+    public Fixture(int home, int away, int gw)
     {
-        
+        HomeID = home;
+        AwayID = away;
+        GameWeek = gw;
     }
 
-    // Update is called once per frame
-    void Update()
+
+    public int CompareTo(Fixture other)
     {
-        
+        return GameWeek.CompareTo(other.GameWeek);
+
     }
 }

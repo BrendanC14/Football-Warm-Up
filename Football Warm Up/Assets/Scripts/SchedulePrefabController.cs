@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ResultVuewPrefabController : MonoBehaviour
+public class SchedulePrefabController : MonoBehaviour
 {
     public Text GameWeek;
     public Text HomeTeam;
-    public Text HomeScore;
-    public Text AwayScore;
     public Text AwayTeam;
 }

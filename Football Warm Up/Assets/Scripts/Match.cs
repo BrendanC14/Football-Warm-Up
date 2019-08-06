@@ -11,14 +11,16 @@ public class Match
     public int HomeScore;
     public int AwayScore;
     public Result result;
+    public int GameWeek;
 
-    public Match(int home, int away)
+    public Match(int home, int away, int gw)
     {
         HomeID = home;
         AwayID = away;
         HomeScore = Random.Range(0, 5);
         AwayScore = Random.Range(0, 5);
         result = GetResult();
+        GameWeek = gw;
     }
 
     Result GetResult()

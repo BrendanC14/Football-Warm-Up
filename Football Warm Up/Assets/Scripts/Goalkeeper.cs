@@ -46,11 +46,11 @@ public class Goalkeeper
         Words w = new Words();
         Name = w.GetRandomFirstName() + " " + w.GetRandomLastName();
         Age = Random.Range(15, 32);
-        Reflexes = Random.Range(1, 20) + Random.Range(0, (int)(balance / 100));
-        Handling = Random.Range(1, 20) + Random.Range(0, (int)(balance / 100));
-        OneOnOnes = Random.Range(1, 20) + Random.Range(0, (int)(balance / 100));
-        Passing = Random.Range(1, 20) + Random.Range(0, (int)(balance / 100));
-        Diving = Random.Range(1, 20) + Random.Range(0, (int)(balance / 100));
+        Reflexes = Random.Range((int)(balance / 60), 20);
+        Handling = Random.Range((int)(balance / 60), 20);
+        OneOnOnes = Random.Range((int)(balance / 60), 20);
+        Passing = Random.Range((int)(balance / 60), 20);
+        Diving = Random.Range((int)(balance / 60), 20);
 
     }
 }

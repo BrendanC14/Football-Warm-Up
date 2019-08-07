@@ -50,27 +50,27 @@ public class OutfieldPlayer
         Position = Pos;
         if (Position == "Defender")
         {
-            Passing = Random.Range(1, 20) + Random.Range(0, (int)(balance / 100));
-            Tackling = Random.Range(13, 20) + Random.Range(0, (int)(balance / 100));
-            Shooting = Random.Range(1, 10) + Random.Range(0, (int)(balance / 100));
-            Interception = Random.Range(11, 20) + Random.Range(0, (int)(balance / 100));
+            Passing = Random.Range((int)(balance / 60), 20);
+            Tackling = Random.Range((int)(balance / 60), 20);
+            Shooting = Random.Range(1, 10);
+            Interception = Random.Range((int)(balance / 60), 15);
         }
 
         if (Position == "Midfielder")
         {
-            Passing = Random.Range(6, 20) + Random.Range(0, (int)(balance / 100));
-            Tackling = Random.Range(6, 20) + Random.Range(0, (int)(balance / 100));
-            Shooting = Random.Range(6, 20) + Random.Range(0, (int)(balance / 100));
-            Interception = Random.Range(6, 20) + Random.Range(0, (int)(balance / 100));
+            Passing = Random.Range((int)(balance / 60), 20) ;
+            Tackling = Random.Range((int)(balance / 60), 20);
+            Shooting = Random.Range((int)(balance / 60), 20);
+            Interception = Random.Range((int)(balance / 60), 20);
         }
         if (Position == "Forward")
         {
-            Passing = Random.Range(11, 20) + Random.Range(0, (int)(balance / 100));
-            Tackling = Random.Range(1, 10) + Random.Range(0, (int)(balance / 100));
-            Shooting = Random.Range(13, 20) + Random.Range(0, (int)(balance / 100));
-            Interception = Random.Range(1, 10) + Random.Range(0, (int)(balance / 100));
+            Passing = Random.Range((int)(balance / 60), 20);
+            Tackling = Random.Range(1, 10);
+            Shooting = Random.Range((int)(balance / 60), 20);
+            Interception = Random.Range(1, 10);
         }
-        Vision = Random.Range(1, 20);
+        Vision = Random.Range((int)(balance / 60), 20);
     }
   
 }

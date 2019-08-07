@@ -36,26 +36,26 @@ public class WorldController : MonoBehaviour
         LeagueResults = new List<Match>();
         Fixtures = new List<Fixture>();
 
-        Clubs.Add(new Club("Arsenal", 0, 500));
-        Clubs.Add(new Club("Aston Villa", 1, 100));
-        Clubs.Add(new Club("Bournemouth", 2, 250));
-        Clubs.Add(new Club("Brighton", 3, 100));
-        Clubs.Add(new Club("Burnley", 4, 150));
-        Clubs.Add(new Club("Chelsea", 5, 50));
-        Clubs.Add(new Club("Crystal Palace", 6, 150));
-        Clubs.Add(new Club("Everton", 7, 200));
-        Clubs.Add(new Club("Leicester", 8, 200));
-        Clubs.Add(new Club("Liverpool", 9, 450));
-        Clubs.Add(new Club("Man City", 10, 450));
-        Clubs.Add(new Club("Man United", 11, 400));
-        Clubs.Add(new Club("Newcastle", 12, 300));
-        Clubs.Add(new Club("Norwich", 13, 100));
-        Clubs.Add(new Club("Sheffield United", 14, 50));
-        Clubs.Add(new Club("Southampton", 15, 100));
-        Clubs.Add(new Club("Tottenham", 16, 50));
-        Clubs.Add(new Club("Watford", 17, 200));
-        Clubs.Add(new Club("West Ham", 18, 300));
-        Clubs.Add(new Club("Wolves", 19, 150));
+        Clubs.Add(new Club("Arsenal", 0, 840));
+        Clubs.Add(new Club("Aston Villa", 1, 320));
+        Clubs.Add(new Club("Bournemouth", 2, 480));
+        Clubs.Add(new Club("Brighton", 3, 360));
+        Clubs.Add(new Club("Burnley", 4, 440));
+        Clubs.Add(new Club("Chelsea", 5, 920));
+        Clubs.Add(new Club("Crystal Palace", 6, 560));
+        Clubs.Add(new Club("Everton", 7, 720));
+        Clubs.Add(new Club("Leicester", 8, 680));
+        Clubs.Add(new Club("Liverpool", 9, 960));
+        Clubs.Add(new Club("Man City", 10, 1000));
+        Clubs.Add(new Club("Man United", 11, 800));
+        Clubs.Add(new Club("Newcastle", 12, 520));
+        Clubs.Add(new Club("Norwich", 13, 280));
+        Clubs.Add(new Club("Sheffield United", 14, 240));
+        Clubs.Add(new Club("Southampton", 15, 400));
+        Clubs.Add(new Club("Tottenham", 16, 880));
+        Clubs.Add(new Club("Watford", 17, 400));
+        Clubs.Add(new Club("West Ham", 18, 640));
+        Clubs.Add(new Club("Wolves", 19, 760));
 
         int ClubCount = 0;
         foreach (Club c in Clubs)

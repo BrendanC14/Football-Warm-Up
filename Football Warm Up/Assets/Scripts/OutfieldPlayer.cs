@@ -50,27 +50,27 @@ public class OutfieldPlayer
         Position = Pos;
         if (Position == "Defender")
         {
-            Passing = Random.Range((int)(balance / 60), 20);
-            Tackling = Random.Range((int)(balance / 60), 20);
+            Passing = Random.Range((int)(balance / 60), 15) + Random.Range(0,(int) balance / 200);
+            Tackling = Random.Range((int)(balance / 60), 15) + Random.Range(0, (int)balance / 200);
             Shooting = Random.Range(1, 10);
-            Interception = Random.Range((int)(balance / 60), 15);
+            Interception = Random.Range((int)(balance / 60), 15) + Random.Range(0, (int)balance / 200);
         }
 
         if (Position == "Midfielder")
         {
-            Passing = Random.Range((int)(balance / 60), 20) ;
-            Tackling = Random.Range((int)(balance / 60), 20);
-            Shooting = Random.Range((int)(balance / 60), 20);
-            Interception = Random.Range((int)(balance / 60), 20);
+            Passing = Random.Range((int)(balance / 60), 15) + Random.Range(0, (int)balance / 200);
+            Tackling = Random.Range((int)(balance / 60), 15) + Random.Range(0, (int)balance / 200);
+            Shooting = Random.Range((int)(balance / 60), 15) + Random.Range(0, (int)balance / 200);
+            Interception = Random.Range((int)(balance / 60), 15) + Random.Range(0, (int)balance / 200);
         }
         if (Position == "Forward")
         {
-            Passing = Random.Range((int)(balance / 60), 20);
+            Passing = Random.Range((int)(balance / 60), 15) + Random.Range(0, (int)balance / 200);
             Tackling = Random.Range(1, 10);
-            Shooting = Random.Range((int)(balance / 60), 20);
+            Shooting = Random.Range((int)(balance / 60), 15) + Random.Range(0, (int)balance / 200);
             Interception = Random.Range(1, 10);
         }
-        Vision = Random.Range((int)(balance / 60), 20);
+        Vision = Random.Range((int)(balance / 60), 15) + Random.Range(0, (int)balance / 200);
     }
   
 }

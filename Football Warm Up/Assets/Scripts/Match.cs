@@ -33,10 +33,14 @@ public class Match : IComparable<Match>
     int AwayYellowCards;
     int AwayRedCards;
 
+    List<OutfieldPlayer> HomeScorers;
+    List<OutfieldPlayer> AwayScorers;
 
 
     public Match(int home, int away, int gw)
     {
+        HomeScorers = new List<OutfieldPlayer>();
+        AwayScorers = new List<OutfieldPlayer>();
         HomeID = home;
         AwayID = away;
         HomeTeam = WorldController.current.Clubs[home];
@@ -62,7 +66,7 @@ public class Match : IComparable<Match>
         }
 
         HomePassingScore = HomePassingScore / 25;
-        HomeShootingScore = HomeShootingScore / 25;
+        HomeShootingScore = HomeShootingScore / 16;
 
         foreach (Goalkeeper goalie in AwayTeam.Goalies)
         {
@@ -84,7 +88,7 @@ public class Match : IComparable<Match>
         }
 
         AwayPassingScore = AwayPassingScore / 25;
-        AwayShootingScore = AwayShootingScore / 25;
+        AwayShootingScore = AwayShootingScore / 16;
 
         HomePassingStyle = HomeTeam.PassingStyle;
         HomeTacklingStyle = HomeTeam.TacklingStyle;
@@ -94,13 +98,14 @@ public class Match : IComparable<Match>
         AwayShootingStyle = AwayTeam.ShootingStyle;
 
 
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < 4; i++)
         {
             if (WonPassingCompetition(true))
             {
                 if (WonScoringCompetitiom(true))
                 {
                     HomeScore++;
+                    HomeScorers.Add(ChooseGoalscorer(true));
                 }
             }
 
@@ -109,6 +114,7 @@ public class Match : IComparable<Match>
                 if (WonScoringCompetitiom(false))
                 {
                     AwayScore++;
+                    AwayScorers.Add(ChooseGoalscorer(false));
                 }
             }
         }
@@ -122,8 +128,8 @@ public class Match : IComparable<Match>
     {
         if (homeAttacking)
         {
-            int HomeRandomNumber = UnityEngine.Random.Range(1, 10);
-            int AwayRandomNumber = UnityEngine.Random.Range(1, 10);
+            int HomeRandomNumber = UnityEngine.Random.Range(1, 22);
+            int AwayRandomNumber = UnityEngine.Random.Range(1, 20);
 
             HomeRandomNumber += HomePassingScore;
             int awayDefendingScore = 0;
@@ -133,6 +139,7 @@ public class Match : IComparable<Match>
                 {
                     awayDefendingScore += player.Tackling;
                 }
+                awayDefendingScore = awayDefendingScore / 8;
             }
             else if (HomePassingStyle == "Mixed")
             {
@@ -140,6 +147,7 @@ public class Match : IComparable<Match>
                 {
                     awayDefendingScore += player.Interception;
                 }
+                awayDefendingScore = awayDefendingScore / 8;
             }
             else
             {
@@ -151,13 +159,9 @@ public class Match : IComparable<Match>
                 {
                     awayDefendingScore += player.Vision;
                 }
-                foreach (OutfieldPlayer player in AwayTeam.Forwards)
-                {
-                    awayDefendingScore += player.Vision;
-                }
+                awayDefendingScore = awayDefendingScore / 16;
 
             }
-            awayDefendingScore = awayDefendingScore / 22;
             AwayRandomNumber += awayDefendingScore;
 
             int yellowdifference = 0;
@@ -210,8 +214,8 @@ public class Match : IComparable<Match>
         else
         {
 
-            int HomeRandomNumber = UnityEngine.Random.Range(1, 10);
-            int AwayRandomNumber = UnityEngine.Random.Range(1, 10);
+            int HomeRandomNumber = UnityEngine.Random.Range(1, 22);
+            int AwayRandomNumber = UnityEngine.Random.Range(1, 20);
 
             AwayRandomNumber += AwayPassingScore;
             int homeDefendingScore = 0;
@@ -221,14 +225,8 @@ public class Match : IComparable<Match>
                 {
                     homeDefendingScore += player.Tackling;
                 }
-                foreach (OutfieldPlayer player in HomeTeam.Midfielders)
-                {
-                    homeDefendingScore += player.Tackling;
-                }
-                foreach (OutfieldPlayer player in HomeTeam.Forwards)
-                {
-                    homeDefendingScore += player.Tackling;
-                }
+                homeDefendingScore = homeDefendingScore / 8;
+
             }
             else if (AwayPassingStyle == "Mixed")
             {
@@ -236,14 +234,7 @@ public class Match : IComparable<Match>
                 {
                     homeDefendingScore += player.Interception;
                 }
-                foreach (OutfieldPlayer player in HomeTeam.Midfielders)
-                {
-                    homeDefendingScore += player.Interception;
-                }
-                foreach (OutfieldPlayer player in HomeTeam.Forwards)
-                {
-                    homeDefendingScore += player.Interception;
-                }
+                homeDefendingScore = homeDefendingScore / 8;
             }
             else
             {
@@ -255,13 +246,10 @@ public class Match : IComparable<Match>
                 {
                     homeDefendingScore += player.Vision;
                 }
-                foreach (OutfieldPlayer player in HomeTeam.Forwards)
-                {
-                    homeDefendingScore += player.Vision;
-                }
+                homeDefendingScore = homeDefendingScore / 16;
+
 
             }
-            homeDefendingScore = homeDefendingScore / 22;
             HomeRandomNumber += homeDefendingScore;
 
             int yellowdifference = 0;
@@ -285,7 +273,7 @@ public class Match : IComparable<Match>
                 reddifference = 5;
             }
 
-            if (AwayRandomNumber - HomeRandomNumber - (HomeRedCards * 3) >= 0)
+            if (AwayRandomNumber - HomeRandomNumber - (HomeRedCards * 3) > 0)
             {
                 if (AwayRandomNumber - HomeRandomNumber > reddifference)
                 {
@@ -317,8 +305,8 @@ public class Match : IComparable<Match>
     {
         if (homeAttacking)
         {
-            int HomeRandomNumber = UnityEngine.Random.Range(1, 10);
-            int AwayRandomNumber = UnityEngine.Random.Range(1, 10);
+            int HomeRandomNumber = UnityEngine.Random.Range(1, 22);
+            int AwayRandomNumber = UnityEngine.Random.Range(1, 20);
 
             HomeRandomNumber += HomeShootingScore;
             int goalkeepingNumber = 0;
@@ -365,8 +353,8 @@ public class Match : IComparable<Match>
         else
         {
 
-            int HomeRandomNumber = UnityEngine.Random.Range(1, 10);
-            int AwayRandomNumber = UnityEngine.Random.Range(1, 10);
+            int HomeRandomNumber = UnityEngine.Random.Range(1, 22);
+            int AwayRandomNumber = UnityEngine.Random.Range(1, 20);
 
             AwayRandomNumber += AwayShootingScore;
             int goalkeepingNumber = 0;
@@ -408,6 +396,79 @@ public class Match : IComparable<Match>
                 return false;
             }
         }
+    }
+
+    OutfieldPlayer ChooseGoalscorer(bool homeAttacking)
+    {
+        if (homeAttacking)
+        {
+            int totalShootingNumber = 0;
+            foreach(OutfieldPlayer player in HomeTeam.Midfielders)
+            {
+                totalShootingNumber += player.Shooting;
+            }
+            foreach (OutfieldPlayer player in HomeTeam.Forwards)
+            {
+                totalShootingNumber += player.Shooting * 2;
+            }
+
+            int random = UnityEngine.Random.Range(1, totalShootingNumber);
+            int accumulatedNumber = 0;
+
+            foreach (OutfieldPlayer player in HomeTeam.Midfielders)
+            {
+                accumulatedNumber += player.Shooting;
+                if (random <= accumulatedNumber)
+                {
+                    return player;
+                }
+            }
+            foreach (OutfieldPlayer player in HomeTeam.Forwards)
+            {
+                accumulatedNumber += player.Shooting * 2;
+                if (random <= accumulatedNumber)
+                {
+                    return player;
+                }
+
+            }
+        }
+        else
+        {
+            int totalShootingNumber = 0;
+            foreach (OutfieldPlayer player in AwayTeam.Midfielders)
+            {
+                totalShootingNumber += player.Shooting;
+            }
+            foreach (OutfieldPlayer player in AwayTeam.Forwards)
+            {
+                totalShootingNumber += player.Shooting * 2;
+            }
+
+            int random = UnityEngine.Random.Range(1, totalShootingNumber);
+            int accumulatedNumber = 0;
+
+            foreach (OutfieldPlayer player in AwayTeam.Midfielders)
+            {
+                accumulatedNumber += player.Shooting;
+                if (random <= accumulatedNumber)
+                {
+                    return player;
+                }
+            }
+            foreach (OutfieldPlayer player in AwayTeam.Forwards)
+            {
+                accumulatedNumber += player.Shooting * 2;
+                if (random <= accumulatedNumber)
+                {
+                    return player;
+                }
+
+            }
+
+        }
+
+        return null;
     }
 
     Result GetResult()

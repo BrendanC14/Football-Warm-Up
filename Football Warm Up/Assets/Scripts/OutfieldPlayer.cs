@@ -1,11 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
-public class OutfieldPlayer
+public class OutfieldPlayer : IComparable<OutfieldPlayer>
 {
+    public int ID;
     public string Name;
     public int Age;
+    public Club club;
     public string Position;
     public int Passing
     {
@@ -42,35 +45,70 @@ public class OutfieldPlayer
     }
     int vision;
 
-    public OutfieldPlayer(string Pos, double balance)
+    public int Goals;
+    public int WeeksInjured;
+
+    public OutfieldPlayer(string Pos, double balance, Club c, bool youth)
     {
         Words w = new Words();
+        ID = Numbers.current.GetPlayerID();
         Name = w.GetRandomFirstName() + " " + w.GetRandomLastName();
-        Age = Random.Range(15,32);
+        if (youth)
+        {
+            Age = UnityEngine.Random.Range(15, 18);
+        }
+        else { Age = UnityEngine.Random.Range(19, 32); }
+        club = c;
         Position = Pos;
+        int min = (int)balance / 75;
+        int max = (int)balance / 50;
+
         if (Position == "Defender")
         {
-            Passing = Random.Range((int)(balance / 60), 15) + Random.Range(0,(int) balance / 200);
-            Tackling = Random.Range((int)(balance / 60), 15) + Random.Range(0, (int)balance / 200);
-            Shooting = Random.Range(1, 10);
-            Interception = Random.Range((int)(balance / 60), 15) + Random.Range(0, (int)balance / 200);
+            Passing = UnityEngine.Random.Range(min, max);
+            Tackling = UnityEngine.Random.Range(min, max);
+            Shooting = UnityEngine.Random.Range(1, 10);
+            Interception = UnityEngine.Random.Range(min, max);
         }
 
         if (Position == "Midfielder")
         {
-            Passing = Random.Range((int)(balance / 60), 15) + Random.Range(0, (int)balance / 200);
-            Tackling = Random.Range((int)(balance / 60), 15) + Random.Range(0, (int)balance / 200);
-            Shooting = Random.Range((int)(balance / 60), 15) + Random.Range(0, (int)balance / 200);
-            Interception = Random.Range((int)(balance / 60), 15) + Random.Range(0, (int)balance / 200);
+            Passing = UnityEngine.Random.Range(min, max);
+            Tackling = UnityEngine.Random.Range(min, max);
+            Shooting = UnityEngine.Random.Range(min, max);
+            Interception = UnityEngine.Random.Range(min, max);
         }
         if (Position == "Forward")
         {
-            Passing = Random.Range((int)(balance / 60), 15) + Random.Range(0, (int)balance / 200);
-            Tackling = Random.Range(1, 10);
-            Shooting = Random.Range((int)(balance / 60), 15) + Random.Range(0, (int)balance / 200);
-            Interception = Random.Range(1, 10);
+            Passing = UnityEngine.Random.Range(min, max);
+            Tackling = UnityEngine.Random.Range(1, 10);
+            Shooting = UnityEngine.Random.Range(min, max);
+            Interception = UnityEngine.Random.Range(1, 10);
         }
-        Vision = Random.Range((int)(balance / 60), 15) + Random.Range(0, (int)balance / 200);
+        Vision = UnityEngine.Random.Range(min, max);
+        WorldController.current.AllPlayers.Add(this);
+        if (youth)
+        {
+            Passing /= 2;
+            Tackling /= 2 ;
+            Shooting /= 2;
+            Interception /= 2;
+            Vision /= 2;
+        }
     }
-  
+
+    public string GetPositionShortForm(string pos)
+    {
+        if (pos == "Goalkeeper") { return "GK"; }
+        if (pos == "Defender") { return "DEF"; }
+        if (pos == "Midfielder") { return "MID"; }
+        return "FW";
+
+    }
+
+    public int CompareTo(OutfieldPlayer other)
+    {
+        return other.Goals.CompareTo(Goals);
+
+    }
 }

@@ -13,6 +13,7 @@ public class WorldController : MonoBehaviour
     public GameObject SquadViewTitle;
     public GameObject AllClubsPanel;
     public GameObject GameMenuPanel;
+    public GameObject ContinueButton;
 
     PlayerViewPrefabController playerViewController;
     ClubViewPrefabController clubViewController;
@@ -20,6 +21,8 @@ public class WorldController : MonoBehaviour
     public List<Club> Clubs;
     public List<Fixture> Fixtures;
     public List<Match> LeagueResults;
+    public List<OutfieldPlayer> AllPlayers;
+    public List<OutfieldPlayer> Goalscorers;
 
     public static WorldController current;
     public Club ChosenTeam;
@@ -29,33 +32,37 @@ public class WorldController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        current = this;
+        Numbers n = new Numbers();
         SquadViewPanel.SetActive(false);
         AllClubsPanel.SetActive(true);
         GameMenuPanel.SetActive(false);
         Clubs = new List<Club>();
         LeagueResults = new List<Match>();
         Fixtures = new List<Fixture>();
+        AllPlayers = new List<OutfieldPlayer>();
+        Goalscorers = new List<OutfieldPlayer>();
 
-        Clubs.Add(new Club("Arsenal", 0, 840));
-        Clubs.Add(new Club("Aston Villa", 1, 320));
-        Clubs.Add(new Club("Bournemouth", 2, 480));
-        Clubs.Add(new Club("Brighton", 3, 360));
-        Clubs.Add(new Club("Burnley", 4, 440));
-        Clubs.Add(new Club("Chelsea", 5, 920));
-        Clubs.Add(new Club("Crystal Palace", 6, 560));
-        Clubs.Add(new Club("Everton", 7, 720));
-        Clubs.Add(new Club("Leicester", 8, 680));
-        Clubs.Add(new Club("Liverpool", 9, 960));
-        Clubs.Add(new Club("Man City", 10, 1000));
-        Clubs.Add(new Club("Man United", 11, 800));
-        Clubs.Add(new Club("Newcastle", 12, 520));
-        Clubs.Add(new Club("Norwich", 13, 280));
-        Clubs.Add(new Club("Sheffield United", 14, 240));
-        Clubs.Add(new Club("Southampton", 15, 400));
-        Clubs.Add(new Club("Tottenham", 16, 880));
-        Clubs.Add(new Club("Watford", 17, 400));
-        Clubs.Add(new Club("West Ham", 18, 640));
-        Clubs.Add(new Club("Wolves", 19, 760));
+        Clubs.Add(new Club("Arsenal", 0, 960));
+        Clubs.Add(new Club("Aston Villa", 1, 660));
+        Clubs.Add(new Club("Bournemouth", 2, 860));
+        Clubs.Add(new Club("Brighton", 3, 760));
+        Clubs.Add(new Club("Burnley", 4, 800));
+        Clubs.Add(new Club("Chelsea", 5, 940));
+        Clubs.Add(new Club("Crystal Palace", 6, 680));
+        Clubs.Add(new Club("Everton", 7, 880));
+        Clubs.Add(new Club("Leicester", 8, 840));
+        Clubs.Add(new Club("Liverpool", 9, 980));
+        Clubs.Add(new Club("Man City", 10, 980));
+        Clubs.Add(new Club("Man United", 11, 920));
+        Clubs.Add(new Club("Newcastle", 12, 700));
+        Clubs.Add(new Club("Norwich", 13, 640));
+        Clubs.Add(new Club("Sheffield United", 14, 620));
+        Clubs.Add(new Club("Southampton", 15, 720));
+        Clubs.Add(new Club("Tottenham", 16, 600));
+        Clubs.Add(new Club("Watford", 17, 820));
+        Clubs.Add(new Club("West Ham", 18, 740));
+        Clubs.Add(new Club("Wolves", 19, 840));
 
         int ClubCount = 0;
         foreach (Club c in Clubs)
@@ -75,7 +82,6 @@ public class WorldController : MonoBehaviour
             ClubCount++;
         }
         GameWeek = 1;
-        current = this;
     }
 
     // Update is called once per frame
@@ -173,9 +179,14 @@ public class WorldController : MonoBehaviour
         GameMenuPanel.SetActive(true);
         ChosenTeam = Clubs[index];
         CreateFixtures();
+        ChosenTeam.Fixtures.Sort();
+        ContinueButton.GetComponentInChildren<Text>().text = "Next Match\n" +
+            Clubs[ChosenTeam.Fixtures[0].HomeID].Name + " vs " + Clubs[ChosenTeam.Fixtures[0].AwayID].Name;
+        ChosenTeam.FirstTeam = new List<OutfieldPlayer>();
+        ChosenTeam.Goalie = null;
     }
 
-    void CreateFixtures()
+    public void CreateFixtures()
     {
         //This is a list containing all the game weeks in the first half of the season
         //Later, this gets randomised each loop so that the fixtures appear random.
@@ -188,7 +199,7 @@ public class WorldController : MonoBehaviour
         int round;
         for (int gameweek = 0; gameweek < 19; gameweek++)
         {
-            round = AvailableWeeks[Random.Range(0, AvailableWeeks.Count - 1)];
+            round = AvailableWeeks[Random.Range(0, AvailableWeeks.Count)];
             AvailableWeeks.Remove(round);
             for (int match = 0; match < 10; match++)
             {
@@ -212,7 +223,7 @@ public class WorldController : MonoBehaviour
         }
         for (int gameweek = 0; gameweek < 19; gameweek++)
         {
-            round = AvailableWeeks[Random.Range(0, AvailableWeeks.Count - 1)];
+            round = AvailableWeeks[Random.Range(0, AvailableWeeks.Count)];
             AvailableWeeks.Remove(round);
             for (int match = 0; match < 10; match++)
             {

@@ -4,8 +4,10 @@ using UnityEngine;
 
 public class Goalkeeper
 {
+    public int ID;
     public string Name;
     public int Age;
+    public Club club;
     public int Reflexes
     {
         get { return reflexes; }
@@ -41,16 +43,19 @@ public class Goalkeeper
     }
     int diving;
 
-    public Goalkeeper(double balance)
+    public Goalkeeper(double balance, Club c)
     {
         Words w = new Words();
+        ID = Numbers.current.GetPlayerID();
         Name = w.GetRandomFirstName() + " " + w.GetRandomLastName();
         Age = Random.Range(15, 32);
-        Reflexes = Random.Range((int)(balance / 75), 15) + Random.Range(0, (int)balance / 200);
-        Handling = Random.Range((int)(balance / 75), 15) + Random.Range(0, (int)balance / 200);
-        OneOnOnes = Random.Range((int)(balance / 75), 15) + Random.Range(0, (int)balance / 200);
-        Passing = Random.Range((int)(balance / 75), 15) + Random.Range(0, (int)balance / 200);
-        Diving = Random.Range((int)(balance / 75), 15) + Random.Range(0, (int)balance / 200);
-
+        club = c;
+        int min = (int)balance / 75;
+        int max = (int)balance / 50;
+        Reflexes = Random.Range(min, max);
+        Handling = Random.Range(min, max);
+        OneOnOnes = Random.Range(min, max);
+        Passing = Random.Range(min, max);
+        Diving = Random.Range(min, max);
     }
 }

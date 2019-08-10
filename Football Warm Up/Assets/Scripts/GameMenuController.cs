@@ -6,6 +6,8 @@ using UnityEngine.UI;
 public class GameMenuController : MonoBehaviour
 {
 
+    public GameObject ContinueButton;
+
     public GameObject LeagueTablePanel;
     public GameObject TeamLeagueTablePrefab;
     public GameObject TeamLeagueParent;
@@ -18,17 +20,37 @@ public class GameMenuController : MonoBehaviour
     public GameObject SchedulePanel;
     public GameObject SchedulePrefab;
     public GameObject ScheduleParent;
-    public GameObject SquadHeader;
-    public GameObject SquadPanel;
-    public GameObject SquadPlayerPrefab;
-    public GameObject SquadPlayerParent;
+    public GameObject TacticsHeader;
+    public GameObject TacticsPanel;
+    public GameObject TacticPlayerPrefabController;
+    public GameObject TacticsPlayerParent;
     public GameObject PitchPanel;
+    public GameObject MatchReviewPanel;
+    public GameObject MatchReviewPrefab;
+    public GameObject MatchReviewParent;
+    public GameObject MatchReviewResultsParent1;
+    public GameObject MatchReviewResultsParent2;
+    public GameObject MatchReviewResultsParent3;
+    public GameObject YouthSquadPanel;
+    public GameObject YouthSquadParent;
+    public GameObject YouthSquadPrefab;
+
+    public GameObject SquadPanel;
+    public GameObject SquadViewPrefab;
+    public GameObject SquadParent;
+    public GameObject LeagueStatsPanel;
+    public GameObject LeagueStatsViewPrefab;
+    public GameObject LeagueStatsParent;
 
     ResultVuewPrefabController resultViewController;
     TeamLeaguePrefabController teamLeageController;
     FixturePrefabController fixtureViewController;
     SchedulePrefabController scheduleViewController;
-    SquadPlayerPrefab squadPlayerController;
+    TacticPlayerPrefabController tacticPlayerController;
+    MatchReviewPrefabController matchReviewController;
+    SquadViewPrefabController squadPrefabController;
+    LeagueStatsPrefabController leaguePrefabController;
+    YouthViewPrefabController youthPrefabController;
 
     public GameObject GameWeek;
 
@@ -101,10 +123,28 @@ public class GameMenuController : MonoBehaviour
     public GameObject FW4;
     public GameObject FW5;
 
+    public GameObject PreviewPanel;
+    public GameObject PreviewHomeTeam;
+    public GameObject PreviewAwayTeam;
+    public GameObject PreviewHomeLineUpParent;
+    public GameObject PreviewAwayLineUpParent;
+    public GameObject PreviewHomeTactic;
+    public GameObject PreviewHomePassing;
+    public GameObject PreviewHomeTackling;
+    public GameObject PreviewHomeShooting;
+    public GameObject PreviewAwayTactic;
+    public GameObject PreviewAwayPassing;
+    public GameObject PreviewAwayTackling;
+    public GameObject PreviewAwayShooting;
+
+
+
     public GameObject ConfirmBox;
     public Text ConfirmBoxText;
     public GameObject ConfirmBoxButton;
     public GameObject ConfirmBoxCancelButton;
+    public GameObject OKBox;
+    public GameObject OKBoxText;
 
 
     // Start is called before the first frame update
@@ -160,7 +200,47 @@ public class GameMenuController : MonoBehaviour
 
     public void ContinueGame()
     {
+        WorldController w = WorldController.current;
+        if (w.ChosenTeam.FirstTeam.Count < 10 || WorldController.current.ChosenTeam.Goalie == null)
+        {
+            OpenOKBox("You haven't selected your first 11 yet!");
+            return;
+        }
+        foreach (OutfieldPlayer player in w.ChosenTeam.FirstTeam)
+        {
+            if (player.WeeksInjured > 0)
+            {
+                OpenOKBox("You have an injured player in your first 11!");
+                return;
+
+            }
+        }
+
+        if (w.GameWeek == 39)
+        {
+            w.LeagueResults = new List<Match>();
+            w.Fixtures = new List<Fixture>();
+            foreach (Club c in WorldController.current.Clubs)
+            {
+                c.EndSeason();
+            }
+            foreach (OutfieldPlayer player in w.Goalscorers)
+            {
+                player.Goals = 0;
+            }
+            w.CreateFixtures();
+            w.ChosenTeam.Fixtures.Sort();
+            ContinueButton.GetComponentInChildren<Text>().text = "Next Match\n" +
+             w.Clubs[w.ChosenTeam.Fixtures[0].HomeID].Name + " vs " + w.Clubs[w.ChosenTeam.Fixtures[0].AwayID].Name;
+
+            w.GameWeek = 1;
+
+            OpenOKBox("New Season has started");
+
+            return;
+        }
         WorldController.current.Fixtures.Sort();
+        Match playersMatch = null;
         for (int i = 0; i < 10; i++)
         {
             Fixture f = WorldController.current.Fixtures[0];
@@ -173,16 +253,253 @@ public class GameMenuController : MonoBehaviour
             WorldController.current.Fixtures.Remove(f);
             WorldController.current.Clubs[f.HomeID].Fixtures.Remove(f);
             WorldController.current.Clubs[f.AwayID].Fixtures.Remove(f);
+            if (m.Injured.Count > 0)
+            {
+                foreach (OutfieldPlayer player in m.Injured)
+                {
+                    Club c = player.club;
+                    if (c != WorldController.current.ChosenTeam)
+                    {
+                        if (c.FirstTeam.Contains(player))
+                        {
+                            c.FirstTeam.Remove(player);
+                            if (player.Position == "Defender")
+                            {
+                                c.FirstTeam.Add(c.Defenders[Random.Range(0, c.Defenders.Count - 1)]);
+                            }
+                            if (player.Position == "Midfielder")
+                            {
+                                c.FirstTeam.Add(c.Midfielders[Random.Range(0, c.Midfielders.Count - 1)]);
+                            }
+                            if (player.Position == "Forward")
+                            {
+                                c.FirstTeam.Add(c.Forwards[Random.Range(0, c.Forwards.Count - 1)]);
+                            }
+                        }
+                    }
+                }
+            }
+            if (WorldController.current.ChosenTeam.ID == f.HomeID || WorldController.current.ChosenTeam.ID == f.AwayID)
+            {
+                playersMatch = m;
+            }
         }
         WorldController.current.GameWeek++;
+        foreach (Club c in WorldController.current.Clubs)
+        {
+            foreach (OutfieldPlayer player in c.Defenders)
+            {
+                if (player.WeeksInjured > 0)
+                {
+                    player.WeeksInjured--;
+                    if (player.WeeksInjured == 0 && player.club == WorldController.current.ChosenTeam)
+                    {
+                        OpenOKBox(player.Name + " has returned from injury");
+                    }
+                }
+            }
+            foreach (OutfieldPlayer player in c.Midfielders)
+            {
+                if (player.WeeksInjured > 0)
+                {
+                    player.WeeksInjured--;
+                    if (player.WeeksInjured == 0 && player.club == WorldController.current.ChosenTeam)
+                    {
+                        OpenOKBox(player.Name + " has returned from injury");
+                    }
+                }
+            }
+            foreach (OutfieldPlayer player in c.Forwards)
+            {
+                if (player.WeeksInjured > 0)
+                {
+
+                    player.WeeksInjured--;
+                    if (player.WeeksInjured == 0 && player.club == WorldController.current.ChosenTeam)
+                    {
+                        OpenOKBox(player.Name + " has returned from injury");
+                    }
+                }
+            }
+        }
+        
         GameWeek.GetComponent<Text>().text = "Gameweek: " + WorldController.current.GameWeek.ToString();
+        OpenMatchReview(playersMatch);
+    }
+
+    public void OpenMatchReview(Match m)
+    {
+        foreach (Transform child in MatchReviewParent.transform)
+        {
+            Destroy(child.gameObject);
+        }
+        MatchReviewPanel.SetActive(true);
+        GameObject matchReviewDisplay = Instantiate(MatchReviewPrefab) as GameObject;
+        matchReviewDisplay.name = m.HomeID.ToString() + "V" + m.AwayID.ToString();
+        matchReviewController = matchReviewDisplay.GetComponent<MatchReviewPrefabController>();
+        matchReviewController.HomeTeam.text = WorldController.current.Clubs[m.HomeID].Name;
+        matchReviewController.HomeScore.text = m.HomeScore.ToString();
+        matchReviewController.AwayScore.text = m.AwayScore.ToString();
+        matchReviewController.AwayTeam.text = WorldController.current.Clubs[m.AwayID].Name;
+        string homeScorers = "";
+        string awayScorers = "";
+        foreach (OutfieldPlayer scorer in m.HomeScorers)
+        {
+            homeScorers += scorer.Name + "\n";
+        }
+        foreach (OutfieldPlayer scorer in m.AwayScorers)
+        {
+            awayScorers += scorer.Name + "\n";
+        }
+        Club chosenTeam = WorldController.current.ChosenTeam;
+        if (m.HomeID == chosenTeam.ID || m.AwayID == chosenTeam.ID)
+        {
+            if (m.HomeScore == m.AwayScore)
+            {
+                matchReviewDisplay.GetComponent<Image>().color = new Color(1f, 0.5f, 0.3f, 1f);
+            }
+            else
+            {
+                if (m.HomeScore > m.AwayScore)
+                {
+                    if (m.HomeID == chosenTeam.ID)
+                    {
+                        matchReviewDisplay.GetComponent<Image>().color = new Color(0.1f, 0.7f, 0.4f, 1f);
+
+                    }
+                    else
+                    {
+                        matchReviewDisplay.GetComponent<Image>().color = new Color(1f, 0f, 0.2f, 1f);
+
+                    }
+                }
+                else
+                {
+                    if (m.AwayID == chosenTeam.ID)
+                    {
+                        matchReviewDisplay.GetComponent<Image>().color = new Color(0.1f, 0.7f, 0.4f, 1f);
+
+                    }
+                    else
+                    {
+                        matchReviewDisplay.GetComponent<Image>().color = new Color(1f, 0f, 0.2f, 1f);
+
+                    }
+
+                }
+            }
+        }
+        matchReviewController.HomeGoalscorers.text = homeScorers;
+        matchReviewController.AwayGoalscorers.text = awayScorers;
+        matchReviewController.MatchReport.text = m.MatchReport;
+        matchReviewDisplay.transform.SetParent(MatchReviewParent.transform);
+        matchReviewDisplay.transform.localPosition = new Vector3(0, 181.125f, 0);
+        WorldController w = WorldController.current;
+        foreach (Transform child in MatchReviewResultsParent1.transform)
+        {
+            Destroy(child.gameObject);
+        }
+        foreach (Transform child in MatchReviewResultsParent2.transform)
+        {
+            Destroy(child.gameObject);
+        }
+        foreach (Transform child in MatchReviewResultsParent3.transform)
+        {
+            Destroy(child.gameObject);
+        }
+        for (int i = w.LeagueResults.Count - 1; i > w.LeagueResults.Count - 4; i--)
+        {
+
+            Match ma = WorldController.current.LeagueResults[i];
+            GameObject resultDisplay = Instantiate(ResultViewPrefab) as GameObject;
+            resultDisplay.name = ma.HomeID.ToString() + "V" + m.AwayID.ToString();
+            resultViewController = resultDisplay.GetComponent<ResultVuewPrefabController>();
+            resultViewController.GameWeek.text = "Gameweek " + ma.GameWeek.ToString();
+            resultViewController.HomeTeam.text = WorldController.current.Clubs[ma.HomeID].Name;
+            resultViewController.HomeScore.text = ma.HomeScore.ToString();
+            resultViewController.AwayScore.text = ma.AwayScore.ToString();
+            resultViewController.AwayTeam.text = WorldController.current.Clubs[ma.AwayID].Name;
+            resultDisplay.GetComponent<Button>().onClick.AddListener(() => OpenMatchReview(ma));
+            resultDisplay.transform.SetParent(MatchReviewResultsParent1.transform);
+        }
+        for (int i = w.LeagueResults.Count - 4; i > w.LeagueResults.Count - 7; i--)
+        {
+
+            Match ma = WorldController.current.LeagueResults[i];
+            GameObject resultDisplay = Instantiate(ResultViewPrefab) as GameObject;
+            resultDisplay.name = ma.HomeID.ToString() + "V" + m.AwayID.ToString();
+            resultViewController = resultDisplay.GetComponent<ResultVuewPrefabController>();
+            resultViewController.GameWeek.text = "Gameweek " + ma.GameWeek.ToString();
+            resultViewController.HomeTeam.text = WorldController.current.Clubs[ma.HomeID].Name;
+            resultViewController.HomeScore.text = ma.HomeScore.ToString();
+            resultViewController.AwayScore.text = ma.AwayScore.ToString();
+            resultViewController.AwayTeam.text = WorldController.current.Clubs[ma.AwayID].Name;
+            resultDisplay.GetComponent<Button>().onClick.AddListener(() => OpenMatchReview(ma));
+            resultDisplay.transform.SetParent(MatchReviewResultsParent2.transform);
+        }
+        for (int i = w.LeagueResults.Count - 7; i > w.LeagueResults.Count - 10; i--)
+        {
+
+            Match ma = WorldController.current.LeagueResults[i];
+            GameObject resultDisplay = Instantiate(ResultViewPrefab) as GameObject;
+            resultDisplay.name = ma.HomeID.ToString() + "V" + m.AwayID.ToString();
+            resultViewController = resultDisplay.GetComponent<ResultVuewPrefabController>();
+            resultViewController.GameWeek.text = "Gameweek " + ma.GameWeek.ToString();
+            resultViewController.HomeTeam.text = WorldController.current.Clubs[ma.HomeID].Name;
+            resultViewController.HomeScore.text = ma.HomeScore.ToString();
+            resultViewController.AwayScore.text = ma.AwayScore.ToString();
+            resultViewController.AwayTeam.text = WorldController.current.Clubs[ma.AwayID].Name;
+            resultDisplay.GetComponent<Button>().onClick.AddListener(() => OpenMatchReview(ma));
+            resultDisplay.transform.SetParent(MatchReviewResultsParent3.transform);
+        }
+    }
+
+    public void CloseMatchReview()
+    {
+        WorldController w = WorldController.current;
+        MatchReviewPanel.SetActive(false);
+        if (WorldController.current.GameWeek == 39)
+        {
+            ContinueButton.GetComponentInChildren<Text>().text = "End Season";
+        }
+        else
+        {
+            if (w.Fixtures.Count > 0)
+            {
+                ContinueButton.GetComponentInChildren<Text>().text = "Next Match\n" +
+                    w.Clubs[w.ChosenTeam.Fixtures[0].HomeID].Name + " vs " + w.Clubs[w.ChosenTeam.Fixtures[0].AwayID].Name;
+            }
+        }
+        Club chosenCLub = w.ChosenTeam;
+        int randomInjury = Random.Range(1, 38);
+        if (randomInjury >= 35)
+        {
+            OutfieldPlayer player;
+            if (randomInjury == 35)
+            {
+                player = chosenCLub.Defenders[Random.Range(0, chosenCLub.Defenders.Count - 1)];
+            }
+            else if (randomInjury == 36)
+            {
+                player = chosenCLub.Forwards[Random.Range(0, chosenCLub.Midfielders.Count - 1)];
+            }
+            else
+            {
+                player = chosenCLub.Midfielders[Random.Range(0, chosenCLub.Forwards.Count - 1)];
+            }
+
+
+            player.WeeksInjured = Random.Range(2, 9);
+            OpenOKBox(player.Name + " has picked up an injury training and is out for " + player.WeeksInjured.ToString() + " weeks");
+        }
     }
 
     public void OpenResults()
     {
         ResultsPanel.SetActive(true);
-        foreach (Match m in WorldController.current.LeagueResults)
+        for (int i = WorldController.current.LeagueResults.Count - 1; i >= 0; i--)
         {
+            Match m = WorldController.current.LeagueResults[i];
             GameObject resultDisplay = Instantiate(ResultViewPrefab) as GameObject;
             resultDisplay.name = m.HomeID.ToString() + "V" + m.AwayID.ToString();
             resultViewController = resultDisplay.GetComponent<ResultVuewPrefabController>();
@@ -191,6 +508,7 @@ public class GameMenuController : MonoBehaviour
             resultViewController.HomeScore.text = m.HomeScore.ToString();
             resultViewController.AwayScore.text = m.AwayScore.ToString();
             resultViewController.AwayTeam.text = WorldController.current.Clubs[m.AwayID].Name;
+            resultDisplay.GetComponent<Button>().onClick.AddListener(() => OpenMatchReview(m));
             resultDisplay.transform.SetParent(ResultViewParent.transform);
             if (WorldController.current.IsMyClubID(m.HomeID) || WorldController.current.IsMyClubID(m.AwayID))
             {
@@ -221,6 +539,7 @@ public class GameMenuController : MonoBehaviour
             fixtureViewController.GameWeek.text = "Gameweek: " + f.GameWeek.ToString();
             fixtureViewController.HomeTeam.text = WorldController.current.Clubs[f.HomeID].Name;
             fixtureViewController.AwayTeam.text = WorldController.current.Clubs[f.AwayID].Name;
+            fixtureDisplay.GetComponent<Button>().onClick.AddListener(() => OpenMatchPreview(f));
             fixtureDisplay.transform.SetParent(FixtureParent.transform);
             if (WorldController.current.IsMyClubID(f.HomeID) || WorldController.current.IsMyClubID(f.AwayID))
             {
@@ -252,6 +571,7 @@ public class GameMenuController : MonoBehaviour
             resultViewController.HomeScore.text = m.HomeScore.ToString();
             resultViewController.AwayScore.text = m.AwayScore.ToString();
             resultViewController.AwayTeam.text = WorldController.current.Clubs[m.AwayID].Name;
+            resultDisplay.GetComponent<Button>().onClick.AddListener(() => OpenMatchReview(m));
             resultDisplay.transform.SetParent(ScheduleParent.transform);
 
             if (m.HomeScore == m.AwayScore)
@@ -298,7 +618,8 @@ public class GameMenuController : MonoBehaviour
             scheduleViewController.GameWeek.text = "Gameweek: " + f.GameWeek.ToString();
             scheduleViewController.HomeTeam.text = WorldController.current.Clubs[f.HomeID].Name;
             scheduleViewController.AwayTeam.text = WorldController.current.Clubs[f.AwayID].Name;
-            scheduleViewController.transform.SetParent(ScheduleParent.transform);
+            fixtureDisplay.GetComponent<Button>().onClick.AddListener(() => OpenMatchPreview(f));
+            fixtureDisplay.transform.SetParent(ScheduleParent.transform);
 
         }
     }
@@ -312,88 +633,134 @@ public class GameMenuController : MonoBehaviour
 
     }
 
-    public void OpenSquad()
+    public void OpenTactics()
     {
         GoalieGOMap = new Dictionary<Goalkeeper, GameObject>();
         DefenderGOMap = new Dictionary<OutfieldPlayer, GameObject>();
         MidfielderGOMap = new Dictionary<OutfieldPlayer, GameObject>();
         ForwardGOMap = new Dictionary<OutfieldPlayer, GameObject>();
-        foreach (Transform child in SquadPlayerParent.transform)
+        foreach (Transform child in TacticsPlayerParent.transform)
         {
             Destroy(child.gameObject);
         }
 
 
-        SquadPanel.SetActive(true);
+        TacticsPanel.SetActive(true);
         Club c = WorldController.current.ChosenTeam;
-        SquadHeader.GetComponent<Text>().text = c.Name;
+        TacticsHeader.GetComponent<Text>().text = c.Name;
 
         foreach (Goalkeeper goalie in c.Goalies)
         {
-            GameObject newPlayerDisplay = Instantiate(SquadPlayerPrefab) as GameObject;
-            newPlayerDisplay.name = goalie.Name;
-            squadPlayerController = newPlayerDisplay.GetComponent<SquadPlayerPrefab>();
-            squadPlayerController.Name.text = goalie.Name;
-            squadPlayerController.Age.text = "Age: " + goalie.Age.ToString();
-            squadPlayerController.Position.text = "Goalkeeper";
-            squadPlayerController.Stats.text = "Reflexes: " + goalie.Reflexes.ToString() +
+            GameObject newPlayerDisplay = Instantiate(TacticPlayerPrefabController) as GameObject;
+            newPlayerDisplay.name = goalie.Name + goalie.ID;
+            tacticPlayerController = newPlayerDisplay.GetComponent<TacticPlayerPrefabController>();
+            tacticPlayerController.Name.text = goalie.Name;
+            tacticPlayerController.Age.text = "Age: " + goalie.Age.ToString();
+            tacticPlayerController.Position.text = "Goalkeeper";
+            tacticPlayerController.Stats.text = "Reflexes: " + goalie.Reflexes.ToString() +
                 "\nHandling: " + goalie.Handling.ToString() +
                 "\nOne on ones: " + goalie.OneOnOnes.ToString() +
                 "\nPassing: " + goalie.Passing.ToString() +
                 "\nDiving: " + goalie.Diving.ToString();
-            squadPlayerController.Select.onClick.AddListener(() => SelectPlayer(goalie));
-            newPlayerDisplay.transform.SetParent(SquadPlayerParent.transform);
+            tacticPlayerController.Select.onClick.AddListener(() => SelectPlayer(goalie));
+            newPlayerDisplay.transform.SetParent(TacticsPlayerParent.transform);
             GoalieGOMap.Add(goalie, newPlayerDisplay);
         }
         foreach (OutfieldPlayer player in c.Defenders)
         {
-            GameObject newPlayerDisplay = Instantiate(SquadPlayerPrefab) as GameObject;
-            newPlayerDisplay.name = player.Name;
-            squadPlayerController = newPlayerDisplay.GetComponent<SquadPlayerPrefab>();
-            squadPlayerController.Name.text = player.Name;
-            squadPlayerController.Age.text = "Age: " + player.Age.ToString();
-            squadPlayerController.Position.text = "Defender";
-            squadPlayerController.Stats.text = "Passing: " + player.Passing.ToString() +
+            GameObject newPlayerDisplay = Instantiate(TacticPlayerPrefabController) as GameObject;
+            newPlayerDisplay.name = player.Name + player.ID;
+            tacticPlayerController = newPlayerDisplay.GetComponent<TacticPlayerPrefabController>();
+            tacticPlayerController.Name.text = player.Name;
+            tacticPlayerController.Age.text = "Age: " + player.Age.ToString();
+            tacticPlayerController.Position.text = "Defender";
+            tacticPlayerController.Stats.text = "Passing: " + player.Passing.ToString() +
                 "\nTackling: " + player.Tackling.ToString() +
                 "\nShooting: " + player.Shooting.ToString() +
                 "\nInterceptions: " + player.Interception.ToString() +
                 "\nVision: " + player.Vision.ToString();
-            squadPlayerController.Select.onClick.AddListener(() => SelectPlayer(null, player));
-            newPlayerDisplay.transform.SetParent(SquadPlayerParent.transform);
+            tacticPlayerController.Select.onClick.AddListener(() => SelectPlayer(null, player));
+            if (player.WeeksInjured > 0)
+            {
+                if (player.WeeksInjured == 1)
+                {
+                    tacticPlayerController.Injured.text = "*injured for 1 week";
+                    tacticPlayerController.Injured.color = new Color(1f, 0f, 0.2f, 1f);
+                }
+                else
+                {
+                    tacticPlayerController.Injured.text = "injured for " + player.WeeksInjured.ToString() + " weeks";
+                }
+            }
+            else
+            {
+                tacticPlayerController.Injured.text = "";
+            }
+            newPlayerDisplay.transform.SetParent(TacticsPlayerParent.transform);
             DefenderGOMap.Add(player, newPlayerDisplay);
         }
         foreach (OutfieldPlayer player in c.Midfielders)
         {
-            GameObject newPlayerDisplay = Instantiate(SquadPlayerPrefab) as GameObject;
-            newPlayerDisplay.name = player.Name;
-            squadPlayerController = newPlayerDisplay.GetComponent<SquadPlayerPrefab>();
-            squadPlayerController.Name.text = player.Name;
-            squadPlayerController.Age.text = "Age: " + player.Age.ToString();
-            squadPlayerController.Position.text = "Midfielder";
-            squadPlayerController.Stats.text = "Passing: " + player.Passing.ToString() +
+            GameObject newPlayerDisplay = Instantiate(TacticPlayerPrefabController) as GameObject;
+            newPlayerDisplay.name = player.Name + player.ID;
+            tacticPlayerController = newPlayerDisplay.GetComponent<TacticPlayerPrefabController>();
+            tacticPlayerController.Name.text = player.Name;
+            tacticPlayerController.Age.text = "Age: " + player.Age.ToString();
+            tacticPlayerController.Position.text = "Midfielder";
+            tacticPlayerController.Stats.text = "Passing: " + player.Passing.ToString() +
                 "\nTackling: " + player.Tackling.ToString() +
                 "\nShooting: " + player.Shooting.ToString() +
                 "\nInterceptions: " + player.Interception.ToString() +
                 "\nVision: " + player.Vision.ToString();
-            squadPlayerController.Select.onClick.AddListener(() => SelectPlayer(null, player));
-            newPlayerDisplay.transform.SetParent(SquadPlayerParent.transform);
+            tacticPlayerController.Select.onClick.AddListener(() => SelectPlayer(null, player));
+            if (player.WeeksInjured > 0)
+            {
+                if (player.WeeksInjured == 1)
+                {
+                    tacticPlayerController.Injured.text = "*injured for 1 week";
+                }
+                else
+                {
+                    tacticPlayerController.Injured.text = "injured for " + player.WeeksInjured.ToString() + " weeks";
+                }
+            }
+            else
+            {
+                tacticPlayerController.Injured.text = "";
+            }
+            newPlayerDisplay.transform.SetParent(TacticsPlayerParent.transform);
             MidfielderGOMap.Add(player, newPlayerDisplay);
         }
         foreach (OutfieldPlayer player in c.Forwards)
         {
-            GameObject newPlayerDisplay = Instantiate(SquadPlayerPrefab) as GameObject;
-            newPlayerDisplay.name = player.Name;
-            squadPlayerController = newPlayerDisplay.GetComponent<SquadPlayerPrefab>();
-            squadPlayerController.Name.text = player.Name;
-            squadPlayerController.Age.text = "Age: " + player.Age.ToString();
-            squadPlayerController.Position.text = "Forward";
-            squadPlayerController.Stats.text = "Passing: " + player.Passing.ToString() +
+            GameObject newPlayerDisplay = Instantiate(TacticPlayerPrefabController) as GameObject;
+            newPlayerDisplay.name = player.Name + player.ID;
+            tacticPlayerController = newPlayerDisplay.GetComponent<TacticPlayerPrefabController>();
+            tacticPlayerController.Name.text = player.Name;
+            tacticPlayerController.Age.text = "Age: " + player.Age.ToString();
+            tacticPlayerController.Position.text = "Forward";
+            tacticPlayerController.Stats.text = "Passing: " + player.Passing.ToString() +
                 "\nTackling: " + player.Tackling.ToString() +
                 "\nShooting: " + player.Shooting.ToString() +
                 "\nInterceptions: " + player.Interception.ToString() +
                 "\nVision: " + player.Vision.ToString();
-            squadPlayerController.Select.onClick.AddListener(() => SelectPlayer(null, player));
-            newPlayerDisplay.transform.SetParent(SquadPlayerParent.transform);
+            tacticPlayerController.Select.onClick.AddListener(() => SelectPlayer(null, player));
+            if (player.WeeksInjured > 0)
+            {
+                if (player.WeeksInjured == 1)
+                {
+                    tacticPlayerController.Injured.text = "*injured for 1 week";
+                }
+                else
+                {
+                    tacticPlayerController.Injured.text = "injured for " + player.WeeksInjured.ToString() + " weeks";
+                }
+            }
+            else
+            {
+                tacticPlayerController.Injured.text = "";
+            }
+            newPlayerDisplay.transform.SetParent(TacticsPlayerParent.transform);
             ForwardGOMap.Add(player, newPlayerDisplay);
         }
 
@@ -413,9 +780,9 @@ public class GameMenuController : MonoBehaviour
             positionSelected = null;
         }
 
-        if (c.FirstTeam.Count > 0)
+        if (c.FirstTeamGOKey.Count > 0)
         {
-            foreach (KeyValuePair<string, OutfieldPlayer> pair in c.FirstTeam)
+            foreach (KeyValuePair<string, OutfieldPlayer> pair in c.FirstTeamGOKey)
             {
                 positionSelected = PositionGOMap[pair.Key];
                 SelectPlayer(null, pair.Value);
@@ -695,7 +1062,7 @@ public class GameMenuController : MonoBehaviour
 
         }
         else
-        { 
+        {
             PassingMixed.GetComponent<Image>().color = Color.white;
             PassingShort.GetComponent<Image>().color = Color.white;
             PassingDirect.GetComponent<Image>().color = new Color(0.1f, 0.7f, 0.4f, 1f);
@@ -750,40 +1117,40 @@ public class GameMenuController : MonoBehaviour
         shootingStyleSelected = style;
     }
 
-        void ResetSuad()
+    void ResetSuad()
     {
         PositionPlayerMap = new Dictionary<GameObject, OutfieldPlayer>();
 
         foreach (KeyValuePair<Goalkeeper, GameObject> pair in GoalieGOMap)
         {
-            pair.Value.GetComponent<SquadPlayerPrefab>().Select.interactable = true;
-            pair.Value.GetComponent<SquadPlayerPrefab>().Select.gameObject.GetComponentInChildren<Text>().text = "Select";
+            pair.Value.GetComponent<TacticPlayerPrefabController>().Select.interactable = true;
+            pair.Value.GetComponent<TacticPlayerPrefabController>().Select.gameObject.GetComponentInChildren<Text>().text = "Select";
 
 
         }
         foreach (KeyValuePair<OutfieldPlayer, GameObject> pair in DefenderGOMap)
         {
-            pair.Value.GetComponent<SquadPlayerPrefab>().Select.interactable = true;
-            pair.Value.GetComponent<SquadPlayerPrefab>().Select.gameObject.GetComponentInChildren<Text>().text = "Select";
+            pair.Value.GetComponent<TacticPlayerPrefabController>().Select.interactable = true;
+            pair.Value.GetComponent<TacticPlayerPrefabController>().Select.gameObject.GetComponentInChildren<Text>().text = "Select";
 
 
         }
         foreach (KeyValuePair<OutfieldPlayer, GameObject> pair in MidfielderGOMap)
         {
-            pair.Value.GetComponent<SquadPlayerPrefab>().Select.interactable = true;
-            pair.Value.GetComponent<SquadPlayerPrefab>().Select.gameObject.GetComponentInChildren<Text>().text = "Select";
+            pair.Value.GetComponent<TacticPlayerPrefabController>().Select.interactable = true;
+            pair.Value.GetComponent<TacticPlayerPrefabController>().Select.gameObject.GetComponentInChildren<Text>().text = "Select";
 
 
         }
         foreach (KeyValuePair<OutfieldPlayer, GameObject> pair in ForwardGOMap)
         {
-            pair.Value.GetComponent<SquadPlayerPrefab>().Select.interactable = true;
-            pair.Value.GetComponent<SquadPlayerPrefab>().Select.gameObject.GetComponentInChildren<Text>().text = "Select";
+            pair.Value.GetComponent<TacticPlayerPrefabController>().Select.interactable = true;
+            pair.Value.GetComponent<TacticPlayerPrefabController>().Select.gameObject.GetComponentInChildren<Text>().text = "Select";
 
 
         }
 
-        foreach (KeyValuePair<string, GameObject> pair in PositionGOMap) 
+        foreach (KeyValuePair<string, GameObject> pair in PositionGOMap)
         {
             pair.Value.GetComponentInChildren<Text>().text = "<empty>";
         }
@@ -797,22 +1164,22 @@ public class GameMenuController : MonoBehaviour
             foreach (KeyValuePair<Goalkeeper, GameObject> goalie in GoalieGOMap)
             {
                 goalie.Value.SetActive(true);
-                goalie.Value.GetComponent<SquadPlayerPrefab>().Select.gameObject.SetActive(false);
+                goalie.Value.GetComponent<TacticPlayerPrefabController>().Select.gameObject.SetActive(false);
             }
             foreach (KeyValuePair<OutfieldPlayer, GameObject> player in DefenderGOMap)
             {
                 player.Value.SetActive(true);
-                player.Value.GetComponent<SquadPlayerPrefab>().Select.gameObject.SetActive(false);
+                player.Value.GetComponent<TacticPlayerPrefabController>().Select.gameObject.SetActive(false);
             }
             foreach (KeyValuePair<OutfieldPlayer, GameObject> player in MidfielderGOMap)
             {
                 player.Value.SetActive(true);
-                player.Value.GetComponent<SquadPlayerPrefab>().Select.gameObject.SetActive(false);
+                player.Value.GetComponent<TacticPlayerPrefabController>().Select.gameObject.SetActive(false);
             }
             foreach (KeyValuePair<OutfieldPlayer, GameObject> player in ForwardGOMap)
             {
                 player.Value.SetActive(true);
-                player.Value.GetComponent<SquadPlayerPrefab>().Select.gameObject.SetActive(false);
+                player.Value.GetComponent<TacticPlayerPrefabController>().Select.gameObject.SetActive(false);
             }
             positionSelected.GetComponent<Image>().color = new Color(0.3f, 0.4f, 0.4f, 0f);
             positionSelected = null;
@@ -825,7 +1192,7 @@ public class GameMenuController : MonoBehaviour
                 foreach (KeyValuePair<Goalkeeper, GameObject> goalie in GoalieGOMap)
                 {
                     goalie.Value.SetActive(true);
-                    goalie.Value.GetComponent<SquadPlayerPrefab>().Select.gameObject.SetActive(true);
+                    goalie.Value.GetComponent<TacticPlayerPrefabController>().Select.gameObject.SetActive(true);
                 }
                 foreach (KeyValuePair<OutfieldPlayer, GameObject> player in DefenderGOMap)
                 {
@@ -849,7 +1216,7 @@ public class GameMenuController : MonoBehaviour
                 foreach (KeyValuePair<OutfieldPlayer, GameObject> player in DefenderGOMap)
                 {
                     player.Value.SetActive(true);
-                    player.Value.GetComponent<SquadPlayerPrefab>().Select.gameObject.SetActive(true);
+                    player.Value.GetComponent<TacticPlayerPrefabController>().Select.gameObject.SetActive(true);
                 }
                 foreach (KeyValuePair<OutfieldPlayer, GameObject> player in MidfielderGOMap)
                 {
@@ -874,7 +1241,7 @@ public class GameMenuController : MonoBehaviour
                 foreach (KeyValuePair<OutfieldPlayer, GameObject> player in MidfielderGOMap)
                 {
                     player.Value.SetActive(true);
-                    player.Value.GetComponent<SquadPlayerPrefab>().Select.gameObject.SetActive(true);
+                    player.Value.GetComponent<TacticPlayerPrefabController>().Select.gameObject.SetActive(true);
                 }
                 foreach (KeyValuePair<OutfieldPlayer, GameObject> player in ForwardGOMap)
                 {
@@ -900,7 +1267,7 @@ public class GameMenuController : MonoBehaviour
                 foreach (KeyValuePair<OutfieldPlayer, GameObject> player in ForwardGOMap)
                 {
                     player.Value.SetActive(true);
-                    player.Value.GetComponent<SquadPlayerPrefab>().Select.gameObject.SetActive(true);
+                    player.Value.GetComponent<TacticPlayerPrefabController>().Select.gameObject.SetActive(true);
                 }
             }
             if (positionSelected != null) { positionSelected.GetComponent<Image>().color = new Color(0.3f, 0.4f, 0.4f, 0f); }
@@ -914,17 +1281,17 @@ public class GameMenuController : MonoBehaviour
         {
             goalieSelected = goalie;
             GK.GetComponentInChildren<Text>().text = goalie.Name;
-            foreach(KeyValuePair<Goalkeeper, GameObject> pair in GoalieGOMap)
+            foreach (KeyValuePair<Goalkeeper, GameObject> pair in GoalieGOMap)
             {
                 if (pair.Key == goalie)
                 {
-                    pair.Value.GetComponent<SquadPlayerPrefab>().Select.interactable = false;
-                    pair.Value.GetComponent<SquadPlayerPrefab>().Select.gameObject.GetComponentInChildren<Text>().text = "Selected";
+                    pair.Value.GetComponent<TacticPlayerPrefabController>().Select.interactable = false;
+                    pair.Value.GetComponent<TacticPlayerPrefabController>().Select.gameObject.GetComponentInChildren<Text>().text = "Selected";
                 }
                 else
                 {
-                    pair.Value.GetComponent<SquadPlayerPrefab>().Select.interactable = true;
-                    pair.Value.GetComponent<SquadPlayerPrefab>().Select.gameObject.GetComponentInChildren<Text>().text = "Select";
+                    pair.Value.GetComponent<TacticPlayerPrefabController>().Select.interactable = true;
+                    pair.Value.GetComponent<TacticPlayerPrefabController>().Select.gameObject.GetComponentInChildren<Text>().text = "Select";
 
 
                 }
@@ -935,24 +1302,25 @@ public class GameMenuController : MonoBehaviour
 
             if (PositionPlayerMap.ContainsKey(positionSelected))
             {
-                
+
                 PositionPlayerMap.Remove(positionSelected);
             }
             PositionPlayerMap.Add(positionSelected, player);
             positionSelected.GetComponentInChildren<Text>().text = player.Name;
+            if (player.WeeksInjured > 0) { positionSelected.GetComponentInChildren<Text>().text = player.Name + "+"; }
 
             foreach (KeyValuePair<OutfieldPlayer, GameObject> pair in DefenderGOMap)
             {
                 if (PositionPlayerMap.ContainsValue(pair.Key))
                 {
-                    pair.Value.GetComponent<SquadPlayerPrefab>().Select.interactable = false;
-                    pair.Value.GetComponent<SquadPlayerPrefab>().Select.gameObject.GetComponentInChildren<Text>().text = "Selected";
+                    pair.Value.GetComponent<TacticPlayerPrefabController>().Select.interactable = false;
+                    pair.Value.GetComponent<TacticPlayerPrefabController>().Select.gameObject.GetComponentInChildren<Text>().text = "Selected";
 
                 }
                 else
                 {
-                    pair.Value.GetComponent<SquadPlayerPrefab>().Select.interactable = true;
-                    pair.Value.GetComponent<SquadPlayerPrefab>().Select.gameObject.GetComponentInChildren<Text>().text = "Select";
+                    pair.Value.GetComponent<TacticPlayerPrefabController>().Select.interactable = true;
+                    pair.Value.GetComponent<TacticPlayerPrefabController>().Select.gameObject.GetComponentInChildren<Text>().text = "Select";
 
                 }
             }
@@ -960,14 +1328,14 @@ public class GameMenuController : MonoBehaviour
             {
                 if (PositionPlayerMap.ContainsValue(pair.Key))
                 {
-                    pair.Value.GetComponent<SquadPlayerPrefab>().Select.interactable = false;
-                    pair.Value.GetComponent<SquadPlayerPrefab>().Select.gameObject.GetComponentInChildren<Text>().text = "Selected";
+                    pair.Value.GetComponent<TacticPlayerPrefabController>().Select.interactable = false;
+                    pair.Value.GetComponent<TacticPlayerPrefabController>().Select.gameObject.GetComponentInChildren<Text>().text = "Selected";
 
                 }
                 else
                 {
-                    pair.Value.GetComponent<SquadPlayerPrefab>().Select.interactable = true;
-                    pair.Value.GetComponent<SquadPlayerPrefab>().Select.gameObject.GetComponentInChildren<Text>().text = "Select";
+                    pair.Value.GetComponent<TacticPlayerPrefabController>().Select.interactable = true;
+                    pair.Value.GetComponent<TacticPlayerPrefabController>().Select.gameObject.GetComponentInChildren<Text>().text = "Select";
 
                 }
             }
@@ -975,14 +1343,20 @@ public class GameMenuController : MonoBehaviour
             {
                 if (PositionPlayerMap.ContainsValue(pair.Key))
                 {
-                    pair.Value.GetComponent<SquadPlayerPrefab>().Select.interactable = false;
-                    pair.Value.GetComponent<SquadPlayerPrefab>().Select.gameObject.GetComponentInChildren<Text>().text = "Select";
+                    pair.Value.GetComponent<TacticPlayerPrefabController>().Select.interactable = false;
+                    pair.Value.GetComponent<TacticPlayerPrefabController>().Select.gameObject.GetComponentInChildren<Text>().text = "Select";
+
+                }
+                else
+                {
+                    pair.Value.GetComponent<TacticPlayerPrefabController>().Select.interactable = true;
+                    pair.Value.GetComponent<TacticPlayerPrefabController>().Select.gameObject.GetComponentInChildren<Text>().text = "Select";
 
                 }
             }
         }
     }
-    public void ConfirmSquad()
+    public void ConfirmTactics()
     {
         Club c = WorldController.current.ChosenTeam;
         c.Tactic = tacticSelected;
@@ -990,12 +1364,14 @@ public class GameMenuController : MonoBehaviour
         c.PassingStyle = passingStyleSelected;
         c.TacklingStyle = tacklingStyleSelected;
         c.ShootingStyle = shootingStyleSelected;
-        c.FirstTeam = new Dictionary<string, OutfieldPlayer>();
+        c.FirstTeam = new List<OutfieldPlayer>();
+        c.FirstTeamGOKey = new Dictionary<string, OutfieldPlayer>();
         foreach (KeyValuePair<GameObject, OutfieldPlayer> pair in PositionPlayerMap)
         {
-            WorldController.current.ChosenTeam.FirstTeam.Add(pair.Key.name, pair.Value);
+            c.FirstTeamGOKey.Add(pair.Key.name, pair.Value);
+            c.FirstTeam.Add(pair.Value);
         }
-        CloseSquad();
+        CloseTactics();
     }
 
 
@@ -1005,7 +1381,7 @@ public class GameMenuController : MonoBehaviour
         {
             return "Goalkeeper";
         }
-        else if (pos == "DL" || pos == "CB2" || pos == "CB3" || pos == "CB4" || pos == "CB5" || pos == "DR")
+        else if (pos == "DL" || pos == "CB1" || pos == "CB2" || pos == "CB3" || pos == "CB4" || pos == "CB5" || pos == "DR" || pos == "WBL" || pos == "WBR")
         {
             return "Defender";
         }
@@ -1016,24 +1392,276 @@ public class GameMenuController : MonoBehaviour
         return "Midfielder";
     }
 
-    public void CheckCloseSquad()
+    public void CheckCloseTactics()
     {
 
-        ConfirmBoxButton.GetComponent<Button>().onClick.AddListener(() => CloseSquad());
+        ConfirmBoxButton.GetComponent<Button>().onClick.AddListener(() => CloseTactics());
         OpenConfirmBox("Any changes will not be saved. Are you sure you want to leave?");
     }
 
-    public void CloseSquad()
+    public void CloseTactics()
     {
         ConfirmBox.SetActive(false);
         PositionPlayerMap = new Dictionary<GameObject, OutfieldPlayer>();
-        SquadPanel.SetActive(false);
+        TacticsPanel.SetActive(false);
         foreach (KeyValuePair<string, GameObject> go in PositionGOMap)
         {
             go.Value.GetComponentInChildren<Text>().text = "<empty>";
             go.Value.GetComponent<Image>().color = new Color(0.3f, 0.4f, 0.4f, 0f);
         }
 
+
+    }
+
+    public void OpenSquad()
+    {
+        SquadPanel.SetActive(true);
+        foreach (Transform child in SquadParent.transform)
+        {
+            Destroy(child.gameObject);
+        }
+        Club c = WorldController.current.ChosenTeam;
+        foreach (Goalkeeper goalie in c.Goalies)
+        {
+            GameObject goalieDisplay = Instantiate(SquadViewPrefab) as GameObject;
+            goalieDisplay.name = goalie.Name;
+            squadPrefabController = goalieDisplay.GetComponent<SquadViewPrefabController>();
+            squadPrefabController.Name.text = goalie.Name;
+            squadPrefabController.Position.text = "GK";
+            squadPrefabController.Goals.text = "N/A";
+            goalieDisplay.transform.SetParent(SquadParent.transform);
+            goalieDisplay.transform.localScale = new Vector3(1f, 1f, 1f);
+        }
+        foreach (OutfieldPlayer player in c.Defenders)
+        {
+            GameObject defenderDisplay = Instantiate(SquadViewPrefab) as GameObject;
+            defenderDisplay.name = player.Name;
+            squadPrefabController = defenderDisplay.GetComponent<SquadViewPrefabController>();
+            squadPrefabController.Name.text = player.Name;
+            squadPrefabController.Position.text = "DEF";
+            squadPrefabController.Goals.text = player.Goals.ToString();
+            defenderDisplay.transform.SetParent(SquadParent.transform);
+            defenderDisplay.transform.localScale = new Vector3(1f, 1f, 1f);
+
+        }
+        foreach (OutfieldPlayer player in c.Midfielders)
+        {
+            GameObject midfielderDisplay = Instantiate(SquadViewPrefab) as GameObject;
+            midfielderDisplay.name = player.Name;
+            squadPrefabController = midfielderDisplay.GetComponent<SquadViewPrefabController>();
+            squadPrefabController.Name.text = player.Name;
+            squadPrefabController.Position.text = "MID";
+            squadPrefabController.Goals.text = player.Goals.ToString();
+            midfielderDisplay.transform.SetParent(SquadParent.transform);
+            midfielderDisplay.transform.localScale = new Vector3(1f, 1f, 1f);
+
+        }
+        foreach (OutfieldPlayer player in c.Forwards)
+        {
+            GameObject forwardDisplay = Instantiate(SquadViewPrefab) as GameObject;
+            forwardDisplay.name = player.Name;
+            squadPrefabController = forwardDisplay.GetComponent<SquadViewPrefabController>();
+            squadPrefabController.Name.text = player.Name;
+            squadPrefabController.Position.text = "FW";
+            squadPrefabController.Goals.text = player.Goals.ToString();
+            forwardDisplay.transform.SetParent(SquadParent.transform);
+            forwardDisplay.transform.localScale = new Vector3(1f, 1f, 1f);
+
+        }
+    }
+
+    public void CloseSquad()
+    {
+        SquadPanel.SetActive(false);
+
+
+    }
+
+    public void OpenLeagueStats()
+    {
+        foreach (Transform child in LeagueStatsParent.transform)
+        {
+            Destroy(child.gameObject);
+        }
+        LeagueStatsPanel.SetActive(true);
+        WorldController.current.Goalscorers.Sort();
+        foreach (OutfieldPlayer player in WorldController.current.Goalscorers)
+        {
+            GameObject playerDisplay = Instantiate(LeagueStatsViewPrefab) as GameObject;
+            playerDisplay.name = player.Name;
+            leaguePrefabController = playerDisplay.GetComponent<LeagueStatsPrefabController>();
+            leaguePrefabController.Name.text = player.Name;
+            leaguePrefabController.TeamName.text = player.club.Name;
+            leaguePrefabController.Position.text = player.GetPositionShortForm(player.Position);
+            leaguePrefabController.Goals.text = player.Goals.ToString();
+            playerDisplay.transform.SetParent(LeagueStatsParent.transform);
+        }
+    }
+    public void CloseLeagueStats()
+    {
+
+        LeagueStatsPanel.SetActive(false);
+
+    }
+
+    public void OpenNextMatchPreview()
+    {
+        OpenMatchPreview();
+    }
+
+    public void OpenMatchPreview(Fixture f = null)
+    {
+        foreach (Transform child in PreviewAwayLineUpParent.transform)
+        {
+            Destroy(child.gameObject);
+        }
+        foreach (Transform child in PreviewHomeLineUpParent.transform)
+        {
+            Destroy(child.gameObject);
+        }
+        if (WorldController.current.ChosenTeam.Fixtures.Count > 0)
+        {
+            Club c = WorldController.current.ChosenTeam;
+            PreviewPanel.SetActive(true);
+            Club HomeTeam;
+            Club AwayTeam;
+            if (f == null)
+            {
+                 HomeTeam = WorldController.current.Clubs[c.Fixtures[0].HomeID];
+                 AwayTeam = WorldController.current.Clubs[c.Fixtures[0].AwayID];
+            }
+            else
+            {
+                HomeTeam = WorldController.current.Clubs[f.HomeID];
+                AwayTeam = WorldController.current.Clubs[f.AwayID];
+            }
+
+            PreviewHomeTeam.GetComponent<Text>().text = HomeTeam.Name;
+            PreviewAwayTeam.GetComponent<Text>().text = AwayTeam.Name;
+
+            PreviewHomeTactic.GetComponentInChildren<Text>().text = HomeTeam.Tactic;
+            PreviewHomePassing.GetComponentInChildren<Text>().text = HomeTeam.PassingStyle;
+            PreviewHomeTackling.GetComponentInChildren<Text>().text = HomeTeam.TacklingStyle;
+            PreviewHomeShooting.GetComponentInChildren<Text>().text = HomeTeam.ShootingStyle;
+
+            PreviewAwayTactic.GetComponentInChildren<Text>().text = AwayTeam.Tactic;
+            PreviewAwayPassing.GetComponentInChildren<Text>().text = AwayTeam.PassingStyle;
+            PreviewAwayTackling.GetComponentInChildren<Text>().text = AwayTeam.TacklingStyle;
+            PreviewAwayShooting.GetComponentInChildren<Text>().text = AwayTeam.ShootingStyle;
+
+            Goalkeeper goalie = HomeTeam.Goalie;
+            GameObject newPlayerDisplay = Instantiate(TacticPlayerPrefabController) as GameObject;
+            tacticPlayerController = newPlayerDisplay.GetComponent<TacticPlayerPrefabController>();
+            if (goalie != null)
+            {
+                newPlayerDisplay.name = goalie.Name + goalie.ID;
+                tacticPlayerController.Name.text = goalie.Name;
+                tacticPlayerController.Age.text = "Age: " + goalie.Age.ToString();
+                tacticPlayerController.Position.text = "Goalkeeper";
+                tacticPlayerController.Stats.text = "Reflexes: " + goalie.Reflexes.ToString() +
+                    "\nHandling: " + goalie.Handling.ToString() +
+                    "\nOne on ones: " + goalie.OneOnOnes.ToString() +
+                    "\nPassing: " + goalie.Passing.ToString() +
+                    "\nDiving: " + goalie.Diving.ToString();
+            }
+            else
+            {
+                newPlayerDisplay.name = "GK";
+                tacticPlayerController.Name.text = "<empty>";
+
+            }
+            newPlayerDisplay.transform.SetParent(PreviewHomeLineUpParent.transform);
+
+            goalie = AwayTeam.Goalie;
+            newPlayerDisplay = Instantiate(TacticPlayerPrefabController) as GameObject;
+            tacticPlayerController = newPlayerDisplay.GetComponent<TacticPlayerPrefabController>();
+            if (goalie != null)
+            {
+                newPlayerDisplay.name = goalie.Name + goalie.ID;
+                tacticPlayerController.Name.text = goalie.Name;
+                tacticPlayerController.Age.text = "Age: " + goalie.Age.ToString();
+                tacticPlayerController.Position.text = "Goalkeeper";
+                tacticPlayerController.Stats.text = "Reflexes: " + goalie.Reflexes.ToString() +
+                    "\nHandling: " + goalie.Handling.ToString() +
+                    "\nOne on ones: " + goalie.OneOnOnes.ToString() +
+                    "\nPassing: " + goalie.Passing.ToString() +
+                    "\nDiving: " + goalie.Diving.ToString();
+            }
+            else
+            {
+                newPlayerDisplay.name = "GK";
+                tacticPlayerController.Name.text = "<empty>";
+
+            }
+            newPlayerDisplay.transform.SetParent(PreviewAwayLineUpParent.transform);
+
+
+
+
+            foreach (OutfieldPlayer player in HomeTeam.FirstTeam)
+            {
+                newPlayerDisplay = Instantiate(TacticPlayerPrefabController) as GameObject;
+                tacticPlayerController = newPlayerDisplay.GetComponent<TacticPlayerPrefabController>();
+                newPlayerDisplay.name = player.Name + player.ID;
+                tacticPlayerController.Name.text = player.Name;
+                tacticPlayerController.Age.text = "Age: " + player.Age.ToString();
+                tacticPlayerController.Position.text = player.Position;
+                tacticPlayerController.Stats.text = "Passing: " + player.Passing.ToString() +
+                    "\nTackling: " + player.Tackling.ToString() +
+                    "\nShooting: " + player.Shooting.ToString() +
+                    "\nInterceptions: " + player.Interception.ToString() +
+                    "\nVision: " + player.Vision.ToString();
+
+
+                newPlayerDisplay.transform.SetParent(PreviewHomeLineUpParent.transform);
+
+            }
+            foreach (OutfieldPlayer player in AwayTeam.FirstTeam)
+            {
+                newPlayerDisplay = Instantiate(TacticPlayerPrefabController) as GameObject;
+                tacticPlayerController = newPlayerDisplay.GetComponent<TacticPlayerPrefabController>();
+                newPlayerDisplay.name = player.Name + player.ID;
+                tacticPlayerController.Name.text = player.Name;
+                tacticPlayerController.Age.text = "Age: " + player.Age.ToString();
+                tacticPlayerController.Position.text = player.Position;
+                tacticPlayerController.Stats.text = "Passing: " + player.Passing.ToString() +
+                    "\nTackling: " + player.Tackling.ToString() +
+                    "\nShooting: " + player.Shooting.ToString() +
+                    "\nInterceptions: " + player.Interception.ToString() +
+                    "\nVision: " + player.Vision.ToString();
+
+
+                newPlayerDisplay.transform.SetParent(PreviewAwayLineUpParent.transform);
+
+            }
+        }
+    }
+    public void CloseMatchPreview()
+    {
+        PreviewPanel.SetActive(false);
+    }
+
+    public void OpenYouthSquad()
+    {
+
+        YouthSquadPanel.SetActive(true);
+        foreach (Transform child in YouthSquadParent.transform)
+        {
+            Destroy(child.gameObject);
+        }
+
+        foreach (OutfieldPlayer player in WorldController.current.ChosenTeam.YouthTeam)
+        {
+            GameObject youthDisplay = Instantiate(YouthSquadPrefab) as GameObject;
+            youthDisplay.name = player.Name;  
+        }
+    }
+    public void CloseYouthSquad()
+    {
+
+    }
+    public void PromotePlayer(OutfieldPlayer player)
+    {
 
     }
 
@@ -1047,6 +1675,16 @@ public class GameMenuController : MonoBehaviour
     {
         ConfirmBox.SetActive(false);
 
+    }
+
+    public void OpenOKBox(string text)
+    {
+        OKBox.SetActive(true);
+        OKBoxText.GetComponent<Text>().text = text;
+    }
+    public void CloseOKBox()
+    {
+        OKBox.SetActive(false);
     }
 
     //      FW FW FW

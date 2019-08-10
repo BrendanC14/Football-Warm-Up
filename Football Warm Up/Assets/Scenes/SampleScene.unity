@@ -3424,6 +3424,10 @@ MonoBehaviour:
   MatchReviewResultsParent1: {fileID: 788944806}
   MatchReviewResultsParent2: {fileID: 1021141948}
   MatchReviewResultsParent3: {fileID: 35000667}
+  YouthSquadPanel: {fileID: 1208833495}
+  YouthSquadParent: {fileID: 1735572481}
+  YouthSquadPrefab: {fileID: 3264029494405763837, guid: 243dbb92110264f09be9dda29ad1f9c2,
+    type: 3}
   SquadPanel: {fileID: 214421725}
   SquadViewPrefab: {fileID: 7180093659376459531, guid: 233aeaaec1b864631b9bc5f9b0757c26,
     type: 3}
@@ -3821,7 +3825,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 210144766}
-        m_MethodName: CloseSquad
+        m_MethodName: CloseYouthSquad
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -13213,7 +13217,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 210144766}
-        m_MethodName: OpenSquad
+        m_MethodName: OpenYouthSquad
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -15996,7 +16000,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1208833496
 RectTransform:
   m_ObjectHideFlags: 0

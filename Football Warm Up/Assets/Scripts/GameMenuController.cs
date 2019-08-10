@@ -1653,15 +1653,38 @@ public class GameMenuController : MonoBehaviour
         foreach (OutfieldPlayer player in WorldController.current.ChosenTeam.YouthTeam)
         {
             GameObject youthDisplay = Instantiate(YouthSquadPrefab) as GameObject;
-            youthDisplay.name = player.Name;  
+            youthDisplay.name = player.Name;
+            youthPrefabController = youthDisplay.GetComponent<YouthViewPrefabController>();
+            youthPrefabController.Name.text = player.Name;
+            youthPrefabController.Position.text = player.Position;
+            youthPrefabController.Passing.text = player.Passing.ToString();
+            youthPrefabController.Tackling.text = player.Tackling.ToString();
+            youthPrefabController.Shooting.text = player.Shooting.ToString();
+            youthPrefabController.Interceptions.text = player.Interception.ToString();
+            youthPrefabController.Vision.text = player.Vision.ToString();
+            youthPrefabController.Promote.onClick.AddListener(() => PromotePlayer(player));
+            youthDisplay.transform.SetParent(YouthSquadParent.transform);
         }
     }
     public void CloseYouthSquad()
     {
-
+        YouthSquadPanel.SetActive(false);
     }
     public void PromotePlayer(OutfieldPlayer player)
     {
+        if (player.Position == "Defender")
+        {
+            player.club.Defenders.Add(player);
+        }
+        else if (player.Position == "Midfielder")
+        {
+            player.club.Midfielders.Add(player);
+
+        }
+        else { player.club.Forwards.Add(player); }
+
+        player.club.YouthTeam.Remove(player);
+        OpenYouthSquad();
 
     }
 

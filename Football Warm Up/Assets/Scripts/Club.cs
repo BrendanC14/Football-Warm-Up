@@ -49,6 +49,7 @@ public class Club : IComparable<Club>
         Fixtures = new List<Fixture>();
         FirstTeam = new List<OutfieldPlayer>();
         FirstTeamGOKey = new Dictionary<string, OutfieldPlayer>();
+        YouthTeam = new List<OutfieldPlayer>();
         Name = name;
         ID = index;
         Balance = balance;
@@ -84,30 +85,30 @@ public class Club : IComparable<Club>
         }
         for (int i = 0; i < 8; i++)
         {
-            Defenders.Add(new OutfieldPlayer("Defender", balance, this));
+            Defenders.Add(new OutfieldPlayer("Defender", balance, this, false));
         }
         for (int i = 0; i < 8; i++)
         {
-            Midfielders.Add(new OutfieldPlayer("Midfielder", balance, this));
+            Midfielders.Add(new OutfieldPlayer("Midfielder", balance, this, false));
         }
         for (int i = 0; i < 6; i++)
         {
-            Forwards.Add(new OutfieldPlayer("Forward", balance, this));
+            Forwards.Add(new OutfieldPlayer("Forward", balance, this, false));
         }
 
         SetFirstTeamSquad();
 
         for (int i = 0; i < 3; i++)
         {
-            Defenders.Add(new OutfieldPlayer("Defender", balance, this));
+            YouthTeam.Add(new OutfieldPlayer("Defender", balance, this, true));
         }
         for (int i = 0; i < 3; i++)
         {
-            Midfielders.Add(new OutfieldPlayer("Midfielder", balance, this));
+            YouthTeam.Add(new OutfieldPlayer("Midfielder", balance,this, true));
         }
         for (int i = 0; i < 2; i++)
         {
-            Forwards.Add(new OutfieldPlayer("Forward", balance, this));
+            YouthTeam.Add(new OutfieldPlayer("Forward", balance, this, true));
         }
 
         int PassingCount = 0;

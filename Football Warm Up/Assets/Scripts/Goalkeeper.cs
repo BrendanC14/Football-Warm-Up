@@ -43,6 +43,7 @@ public class Goalkeeper
     }
     int diving;
 
+    public int value;
     public Goalkeeper(double balance, Club c)
     {
         Words w = new Words();
@@ -57,5 +58,14 @@ public class Goalkeeper
         OneOnOnes = Random.Range(min, max);
         Passing = Random.Range(min, max);
         Diving = Random.Range(min, max);
+
+        WorldController.current.Goalies.Add(this);
+
+        SetValue();
+    }
+
+    public void SetValue()
+    {
+        value = ((Reflexes + Handling + OneOnOnes + Passing + Diving) / 4) + ((int)club.Balance / 100);
     }
 }

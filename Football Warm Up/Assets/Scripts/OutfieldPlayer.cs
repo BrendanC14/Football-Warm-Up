@@ -46,7 +46,16 @@ public class OutfieldPlayer : IComparable<OutfieldPlayer>
     int vision;
 
     public int Goals;
+    public int Assists;
     public int WeeksInjured;
+
+    public int Cost
+    {
+        get { return cost; }
+        set { cost = value; if (value < 0) { cost = 0; } }
+    }
+
+    int cost;
 
     public OutfieldPlayer(string Pos, double balance, Club c, bool youth)
     {
@@ -95,6 +104,13 @@ public class OutfieldPlayer : IComparable<OutfieldPlayer>
             Interception /= 2;
             Vision /= 2;
         }
+        SetValue(balance);
+
+    }
+
+    public void SetValue(double balance)
+    {
+        Cost = ((Passing + Tackling + Shooting + Interception + Vision) / 3) + ((int)balance / 100) + (25 - Age);
     }
 
     public string GetPositionShortForm(string pos)

@@ -37,6 +37,8 @@ public class Match : IComparable<Match>
 
     public List<OutfieldPlayer> HomeScorers;
     public List<OutfieldPlayer> AwayScorers;
+    public List<OutfieldPlayer> HomeAssisters;
+    public List<OutfieldPlayer> AwayAssisters;
     public List<OutfieldPlayer> Injured;
 
     int HomeSuccessfulPassing;
@@ -51,6 +53,8 @@ public class Match : IComparable<Match>
     {
         HomeScorers = new List<OutfieldPlayer>();
         AwayScorers = new List<OutfieldPlayer>();
+        HomeAssisters = new List<OutfieldPlayer>();
+        AwayAssisters = new List<OutfieldPlayer>();
         HomeID = home;
         AwayID = away;
         HomeTeam = WorldController.current.Clubs[home];
@@ -143,12 +147,18 @@ public class Match : IComparable<Match>
                     HomeScore++;
                     OutfieldPlayer scorer = ChooseGoalscorer(true);
                     HomeScorers.Add(scorer);
+                    
                     if (!WorldController.current.Goalscorers.Contains(scorer))
                     {
                         WorldController.current.Goalscorers.Add(scorer);
                     }
-                        
 
+                    OutfieldPlayer assister = ChooseAssist(true);
+                    HomeAssisters.Add(assister);
+                    if (!WorldController.current.Assisters.Contains(assister))
+                    {
+                        WorldController.current.Assisters.Add(assister);
+                    }
                     
                 }
             }
@@ -165,6 +175,12 @@ public class Match : IComparable<Match>
                     {
                         WorldController.current.Goalscorers.Add(scorer);
                     }
+                    OutfieldPlayer assister = ChooseAssist(false);
+                    AwayAssisters.Add(assister);
+                    if (!WorldController.current.Assisters.Contains(assister))
+                    {
+                        WorldController.current.Assisters.Add(assister);
+                    }
                 }
             }
         }
@@ -176,6 +192,14 @@ public class Match : IComparable<Match>
         foreach (OutfieldPlayer player in AwayScorers)
         {
             player.Goals++;
+        }
+        foreach (OutfieldPlayer player in HomeAssisters)
+        {
+            player.Assists++;
+        }
+        foreach (OutfieldPlayer player in AwayAssisters)
+        {
+            player.Assists++;
         }
         result = GetResult();
         MatchReport = GenerateMatchReport();
@@ -567,6 +591,92 @@ public class Match : IComparable<Match>
         return null;
     }
 
+    public OutfieldPlayer ChooseAssist(bool homeAttacking)
+    {
+
+        if (homeAttacking)
+        {
+            int totalPassingNumber = 0;
+            foreach (OutfieldPlayer player in HomeTeam.FirstTeam)
+            {
+                if (player.Position == "Midfielder")
+                {
+                    totalPassingNumber += player.Passing * 2;
+                }
+                else if (player.Position == "Forward")
+                {
+                    totalPassingNumber += player.Passing;
+
+                }
+            }
+
+            int random = UnityEngine.Random.Range(1, totalPassingNumber);
+            int accumulatedNumber = 0;
+
+            foreach (OutfieldPlayer player in HomeTeam.FirstTeam)
+            {
+                if (player.Position == "Midfielder")
+                {
+                    accumulatedNumber += player.Passing * 2;
+                    if (random <= accumulatedNumber)
+                    {
+                        return player;
+                    }
+                }
+                else if (player.Position == "Forward")
+                {
+
+                    accumulatedNumber += player.Passing;
+                    if (random <= accumulatedNumber)
+                    {
+                        return player;
+                    }
+                }
+            }
+        }
+        else
+        {
+            int totalPassingNumber = 0;
+            foreach (OutfieldPlayer player in AwayTeam.FirstTeam)
+            {
+                if (player.Position == "Midfielder")
+                {
+                    totalPassingNumber += player.Passing * 2;
+                }
+                else if (player.Position == "Forward")
+                {
+
+                    totalPassingNumber += player.Passing;
+                }
+            }
+
+            int random = UnityEngine.Random.Range(1, totalPassingNumber);
+            int accumulatedNumber = 0;
+
+            foreach (OutfieldPlayer player in AwayTeam.FirstTeam)
+            {
+                if (player.Position == "Midfielder")
+                {
+                    accumulatedNumber += player.Passing * 2;
+                    if (random <= accumulatedNumber)
+                    {
+                        return player;
+                    }
+                }
+                else if (player.Position == "Forward")
+                {
+                    accumulatedNumber += player.Passing;
+                    if (random <= accumulatedNumber)
+                    {
+                        return player;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
     string GenerateMatchReport()
     {
         WorldController w = WorldController.current;
@@ -657,10 +767,19 @@ public class Match : IComparable<Match>
         }
         else
         {
-            report += "In a clean game with no cards, ";
+            int totalGoals = HomeScore + AwayScore;
+            if (totalGoals >= 5)
+            {
+                report += "In an exciting game, ";
+            }
+            else if (totalGoals >= 2)
+            {
+                report += "In a tough game, ";
+            }
+            else { report += "In a boring game, "; }
             if (HomeScore > AwayScore)
             {
-                report += HomeTeam.Name + " secured a victory at home.";
+                report += HomeTeam.Name + " managed to secure their at home.";
             }
             else if (HomeScore == AwayScore)
             {
@@ -668,7 +787,7 @@ public class Match : IComparable<Match>
             }
             else
             {
-                report += AwayTeam.Name + " secured a victory away from home.";
+                report += AwayTeam.Name + " managed to secure an away victory.";
             }
         }
 

@@ -7,7 +7,7 @@ public class Club : IComparable<Club>
 {
     public string Name;
     public int ID;
-    double Balance;
+    public double Balance;
     public List<Goalkeeper> Goalies;
     public List<OutfieldPlayer> Defenders;
     public List<OutfieldPlayer> Midfielders;
@@ -39,7 +39,9 @@ public class Club : IComparable<Club>
     public List<Match> Results;
     public List<Fixture> Fixtures;
 
-    public Club(string name, int index, double balance)
+    public int Budget;
+
+    public Club(string name, int index, double balance, int budget)
     {
         Goalies = new List<Goalkeeper>();
         Defenders = new List<OutfieldPlayer>();
@@ -53,6 +55,7 @@ public class Club : IComparable<Club>
         Name = name;
         ID = index;
         Balance = balance;
+        Budget = budget;
 
         int random = UnityEngine.Random.Range(0, 6);
         if (random == 1) { Tactic = "442"; }

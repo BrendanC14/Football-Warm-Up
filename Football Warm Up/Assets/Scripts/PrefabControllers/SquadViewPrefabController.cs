@@ -6,9 +6,11 @@ using UnityEngine.UI;
 public class SquadViewPrefabController : MonoBehaviour
 {
     public Text Name;
+    public Text Age;
     public Text Position;
     public Text GamesPlayed;
     public Text Goals;
     public Text Assists;
     public Text Value;
+    public Button Sell;
 }

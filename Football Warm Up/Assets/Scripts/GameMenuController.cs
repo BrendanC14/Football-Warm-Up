@@ -34,6 +34,9 @@ public class GameMenuController : MonoBehaviour
     public GameObject YouthSquadPanel;
     public GameObject YouthSquadParent;
     public GameObject YouthSquadPrefab;
+    public GameObject TransferMarketPanel;
+    public GameObject TransferMarketParent;
+    public GameObject TransferViewPrefab;
 
     public GameObject SquadPanel;
     public GameObject SquadViewPrefab;
@@ -51,6 +54,7 @@ public class GameMenuController : MonoBehaviour
     SquadViewPrefabController squadPrefabController;
     LeagueStatsPrefabController leaguePrefabController;
     YouthViewPrefabController youthPrefabController;
+    TransferViewPrefabController transferPrefabController;
 
     public GameObject GameWeek;
 
@@ -137,8 +141,9 @@ public class GameMenuController : MonoBehaviour
     public GameObject PreviewAwayTackling;
     public GameObject PreviewAwayShooting;
 
+    public GameObject TransferMarketButton;
 
-
+    public GameObject BudgetGameObject;
     public GameObject ConfirmBox;
     public Text ConfirmBoxText;
     public GameObject ConfirmBoxButton;
@@ -216,8 +221,17 @@ public class GameMenuController : MonoBehaviour
             }
         }
 
+
+
         if (w.GameWeek == 39)
         {
+            int currBudget = WorldController.current.ChosenTeam.Budget;
+            UpdateBalance(true);
+            int budgetChange = WorldController.current.ChosenTeam.Budget - currBudget;
+            OpenOKBox("New Season has started and the Transfer Window is open.\nBased on last year's position £" +
+                budgetChange.ToString() + "m has been added to your transfer budget");
+            BudgetGameObject.GetComponentInChildren<Text>().text = "Budget £" + WorldController.current.ChosenTeam.Budget.ToString() + "m";
+
             w.LeagueResults = new List<Match>();
             w.Fixtures = new List<Fixture>();
             foreach (Club c in WorldController.current.Clubs)
@@ -235,8 +249,8 @@ public class GameMenuController : MonoBehaviour
 
             w.GameWeek = 1;
 
-            OpenOKBox("New Season has started");
-
+            w.WindowOpen = true;
+            TransferMarketButton.GetComponent<Button>().interactable = true;
             return;
         }
         WorldController.current.Fixtures.Sort();
@@ -323,8 +337,60 @@ public class GameMenuController : MonoBehaviour
             }
         }
         
-        GameWeek.GetComponent<Text>().text = "Gameweek: " + WorldController.current.GameWeek.ToString();
+        GameWeek.GetComponent<Text>().text = "Gameweek: " + WorldController.current.GameWeek.ToString() + " " + w.Year.ToString();
         OpenMatchReview(playersMatch);
+    }
+
+    void UpdateBalance(bool endOfYear)
+    {
+        int bal;
+
+        List<Club> leagueTable = new List<Club>(WorldController.current.Clubs);
+        leagueTable.Sort();
+        int i = 1;
+        foreach (Club c in leagueTable)
+        {
+
+            if (i == 1)
+            {
+                bal = 50;
+            }
+            else if (i >= 2 && i <= 4)
+            {
+                bal = 45;
+            }
+            else if (i == 5 || i == 6)
+            {
+                bal = 40;
+            }
+            else if (i >= 7 && i <= 10)
+            {
+                bal = 35;
+            }
+            else if (i >= 11 && i <= 14)
+            {
+                bal = 30;
+            }
+            else if (i >= 15 && i <= 17)
+            {
+                bal = 25;
+            }
+            else
+            {
+                bal = 20;
+            }
+
+            if (!endOfYear)
+            {
+                bal /= 2;
+            }
+
+            c.Budget += bal;
+            i++;
+        }
+
+
+
     }
 
     public void OpenMatchReview(Match m)
@@ -492,6 +558,41 @@ public class GameMenuController : MonoBehaviour
             player.WeeksInjured = Random.Range(2, 9);
             OpenOKBox(player.Name + " has picked up an injury training and is out for " + player.WeeksInjured.ToString() + " weeks");
         }
+
+
+        if (w.GameWeek == 5)
+        {
+            OpenOKBox("The Transfer Window closes after your next game");
+
+        }
+        else if (w.GameWeek == 6)
+        {
+            OpenOKBox("The Transfer Window has closed");
+            w.WindowOpen = false;
+            TransferMarketButton.GetComponent<Button>().interactable = false;
+        }
+        else if (w.GameWeek == 21)
+        {
+            w.Year++;
+            int currBudget = WorldController.current.ChosenTeam.Budget;
+            UpdateBalance(false);
+            int budgetChange = WorldController.current.ChosenTeam.Budget - currBudget;
+            OpenOKBox("The Transfer Window has opened.\nBased on your current position £" +
+                budgetChange.ToString() + "m has been added to your transfer budget");
+            w.WindowOpen = true;
+            TransferMarketButton.GetComponent<Button>().interactable = true;
+            BudgetGameObject.GetComponentInChildren<Text>().text = "£" + WorldController.current.ChosenTeam.Budget.ToString() + "m";
+        }
+        else if (w.GameWeek == 24)
+        {
+            OpenOKBox("The Transfer Window closes after your next game");
+        }
+        else if (w.GameWeek == 24)
+        {
+            OpenOKBox("The Transfer Window has closed");
+            w.WindowOpen = false;
+            TransferMarketButton.GetComponent<Button>().interactable = false;
+        }
     }
 
     public void OpenResults()
@@ -515,7 +616,6 @@ public class GameMenuController : MonoBehaviour
                 resultDisplay.GetComponent<Image>().color = new Color(0.7f, 1f, 1f, 1f);
             }
         }
-
     }
 
     public void CloseResults()
@@ -1427,8 +1527,12 @@ public class GameMenuController : MonoBehaviour
             goalieDisplay.name = goalie.Name;
             squadPrefabController = goalieDisplay.GetComponent<SquadViewPrefabController>();
             squadPrefabController.Name.text = goalie.Name;
+            squadPrefabController.Age.text = goalie.Age.ToString();
             squadPrefabController.Position.text = "GK";
             squadPrefabController.Goals.text = "N/A";
+            squadPrefabController.Assists.text = "N/A";
+            squadPrefabController.Value.text = "£" + goalie.value.ToString() + "m";
+            squadPrefabController.Sell.gameObject.SetActive(false);
             goalieDisplay.transform.SetParent(SquadParent.transform);
             goalieDisplay.transform.localScale = new Vector3(1f, 1f, 1f);
         }
@@ -1438,8 +1542,21 @@ public class GameMenuController : MonoBehaviour
             defenderDisplay.name = player.Name;
             squadPrefabController = defenderDisplay.GetComponent<SquadViewPrefabController>();
             squadPrefabController.Name.text = player.Name;
+            squadPrefabController.Age.text = player.Age.ToString();
             squadPrefabController.Position.text = "DEF";
+            squadPrefabController.Value.text = "£" + player.Cost.ToString() + "m";
             squadPrefabController.Goals.text = player.Goals.ToString();
+            squadPrefabController.Assists.text = player.Assists.ToString();
+            if (WorldController.current.WindowOpen && c.Defenders.Count > 5)
+            {
+                squadPrefabController.Sell.gameObject.SetActive(true);
+                squadPrefabController.Sell.onClick.AddListener(() => SellPlayer(player));
+            }
+            else
+            {
+                squadPrefabController.Sell.gameObject.SetActive(false);
+
+            }
             defenderDisplay.transform.SetParent(SquadParent.transform);
             defenderDisplay.transform.localScale = new Vector3(1f, 1f, 1f);
 
@@ -1450,8 +1567,21 @@ public class GameMenuController : MonoBehaviour
             midfielderDisplay.name = player.Name;
             squadPrefabController = midfielderDisplay.GetComponent<SquadViewPrefabController>();
             squadPrefabController.Name.text = player.Name;
+            squadPrefabController.Age.text = player.Age.ToString();
             squadPrefabController.Position.text = "MID";
             squadPrefabController.Goals.text = player.Goals.ToString();
+            squadPrefabController.Assists.text = player.Assists.ToString();
+            squadPrefabController.Value.text = "£" + player.Cost.ToString() + "m";
+            if (WorldController.current.WindowOpen && c.Midfielders.Count > 5)
+            {
+                squadPrefabController.Sell.gameObject.SetActive(true);
+                squadPrefabController.Sell.onClick.AddListener(() => SellPlayer(player));
+            }
+            else
+            {
+                squadPrefabController.Sell.gameObject.SetActive(false);
+
+            }
             midfielderDisplay.transform.SetParent(SquadParent.transform);
             midfielderDisplay.transform.localScale = new Vector3(1f, 1f, 1f);
 
@@ -1462,8 +1592,21 @@ public class GameMenuController : MonoBehaviour
             forwardDisplay.name = player.Name;
             squadPrefabController = forwardDisplay.GetComponent<SquadViewPrefabController>();
             squadPrefabController.Name.text = player.Name;
+            squadPrefabController.Age.text = player.Age.ToString();
             squadPrefabController.Position.text = "FW";
             squadPrefabController.Goals.text = player.Goals.ToString();
+            squadPrefabController.Assists.text = player.Assists.ToString();
+            squadPrefabController.Value.text = "£" + player.Cost.ToString() + "m";
+            if (WorldController.current.WindowOpen && c.Forwards.Count > 3)
+            {
+                squadPrefabController.Sell.gameObject.SetActive(true);
+                squadPrefabController.Sell.onClick.AddListener(() => SellPlayer(player));
+            }
+            else
+            {
+                squadPrefabController.Sell.gameObject.SetActive(false);
+
+            }
             forwardDisplay.transform.SetParent(SquadParent.transform);
             forwardDisplay.transform.localScale = new Vector3(1f, 1f, 1f);
 
@@ -1495,6 +1638,7 @@ public class GameMenuController : MonoBehaviour
             leaguePrefabController.Position.text = player.GetPositionShortForm(player.Position);
             leaguePrefabController.Goals.text = player.Goals.ToString();
             playerDisplay.transform.SetParent(LeagueStatsParent.transform);
+            playerDisplay.transform.localScale = new Vector3(1f, 1f, 1f);
         }
     }
     public void CloseLeagueStats()
@@ -1656,7 +1800,7 @@ public class GameMenuController : MonoBehaviour
             youthDisplay.name = player.Name;
             youthPrefabController = youthDisplay.GetComponent<YouthViewPrefabController>();
             youthPrefabController.Name.text = player.Name;
-            youthPrefabController.Position.text = player.Position;
+            youthPrefabController.Position.text = player.GetPositionShortForm(player.Position);
             youthPrefabController.Passing.text = player.Passing.ToString();
             youthPrefabController.Tackling.text = player.Tackling.ToString();
             youthPrefabController.Shooting.text = player.Shooting.ToString();
@@ -1664,7 +1808,8 @@ public class GameMenuController : MonoBehaviour
             youthPrefabController.Vision.text = player.Vision.ToString();
             youthPrefabController.Promote.onClick.AddListener(() => PromotePlayer(player));
             youthDisplay.transform.SetParent(YouthSquadParent.transform);
-        }
+			youthDisplay.transform.localScale = new Vector3(1f, 1f, 1f);
+		}
     }
     public void CloseYouthSquad()
     {
@@ -1686,6 +1831,108 @@ public class GameMenuController : MonoBehaviour
         player.club.YouthTeam.Remove(player);
         OpenYouthSquad();
 
+    }
+
+    public void OpenTransferMarket()
+    {
+        TransferMarketPanel.SetActive(true);
+        foreach (Transform child in TransferMarketParent.transform)
+        {
+            Destroy(child.gameObject);
+        }
+        List<OutfieldPlayer> players = new List<OutfieldPlayer>();
+
+        if (WorldController.current.TransferListedPlayers.Count > 0)
+        {
+            players = WorldController.current.TransferListedPlayers;
+        }
+        else
+        {
+            players = CreateTransferListedPlayers();
+            WorldController.current.TransferListedPlayers = players;
+        }
+
+
+        foreach (OutfieldPlayer player in players)
+        {
+            GameObject playerDisplay = Instantiate(TransferViewPrefab) as GameObject;
+            playerDisplay.name = player.Name;
+            transferPrefabController = playerDisplay.GetComponent<TransferViewPrefabController>();
+            transferPrefabController.Name.text = player.Name;
+            transferPrefabController.Age.text = player.Age.ToString();
+            transferPrefabController.Position.text = player.GetPositionShortForm(player.Position);
+            transferPrefabController.Passing.text = player.Passing.ToString();
+            transferPrefabController.Tackling.text = player.Tackling.ToString();
+            transferPrefabController.Shooting.text = player.Shooting.ToString();
+            transferPrefabController.Interceptions.text = player.Shooting.ToString();
+            transferPrefabController.Vision.text = player.Vision.ToString();
+            transferPrefabController.Value.text = "£" + player.Cost.ToString() + "m";
+            transferPrefabController.Buy.onClick.AddListener(() => BuyPlayer(player));
+            playerDisplay.transform.SetParent(TransferMarketParent.transform);
+			playerDisplay.transform.localScale = new Vector3(1f, 1f, 1f);
+
+			if (player.Cost > WorldController.current.ChosenTeam.Budget)
+            {
+                transferPrefabController.Buy.interactable = false;
+            }
+        }
+
+    }
+
+    public List<OutfieldPlayer> CreateTransferListedPlayers()
+    {
+        List<OutfieldPlayer> players = new List<OutfieldPlayer>();
+
+        for (int i = 0; i < 20; i++)
+        {
+            players.Add(new OutfieldPlayer(GetRandomPosition(), UnityEngine.Random.Range(500, 1000), null, false));
+        }
+
+        return players;
+    }
+
+    string GetRandomPosition()
+    {
+        int rand = UnityEngine.Random.Range(1, 4);
+
+        if (rand == 1) { return "Defender"; }
+        else if (rand == 2) { return "Midfielder"; }
+        else { return "Forward"; }
+    }
+
+    public void BuyPlayer(OutfieldPlayer player)
+    {
+        WorldController.current.TransferListedPlayers.Remove(player);
+        player.club = WorldController.current.ChosenTeam;
+        if (player.Position == "Defender") { WorldController.current.ChosenTeam.Defenders.Add(player); }
+        else if (player.Position == "Midfielder") { WorldController.current.ChosenTeam.Midfielders.Add(player); }
+        else { WorldController.current.ChosenTeam.Forwards.Add(player); }
+
+        WorldController.current.ChosenTeam.Budget -= player.Cost;
+        BudgetGameObject.GetComponentInChildren<Text>().text = "Budget: £" + WorldController.current.ChosenTeam.Budget +
+            "m";
+
+        OpenTransferMarket();
+    }
+
+    void SellPlayer(OutfieldPlayer player)
+    {
+        player.club = WorldController.current.ChosenTeam;
+        if (player.Position == "Defender") { WorldController.current.ChosenTeam.Defenders.Remove(player); }
+        else if (player.Position == "Midfielder") { WorldController.current.ChosenTeam.Midfielders.Remove(player); }
+        else { WorldController.current.ChosenTeam.Forwards.Remove(player); }
+
+        WorldController.current.ChosenTeam.Budget += player.Cost;
+        BudgetGameObject.GetComponentInChildren<Text>().text = "Budget: £" + WorldController.current.ChosenTeam.Budget +
+            "m";
+
+        OpenSquad();
+
+    }
+
+    public void CloseTransferMarket()
+    {
+        TransferMarketPanel.SetActive(false);
     }
 
     void OpenConfirmBox(string text)
